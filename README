@@ -12,7 +12,7 @@ Prerequisites:
 --------------
 Ruby: MRI. Others untested. 
 For compiling: allegro-5.0.0, and it's dependencies.
-For testing: watchr, autowatchr
+For testing: watchr, autowatchr. Nanotest has been vendored.
 For documentation generation: YARD.
 
 

@@ -17,4 +17,3 @@ disp = nil
 assert { disp = Al::Display.create(640, 480) } 
 
 
-
