@@ -23,6 +23,7 @@ VALUE rbal_color_wrap(ALLEGRO_COLOR * ptr) {
    return Data_Wrap_Struct(cColor, 0, rbal_color_free, ptr);
 }
 
+
 ALLEGRO_COLOR * rbal_color_unwrap(VALUE rself) {
   ALLEGRO_COLOR * result;
   if (rself == Qnil) return NULL;
@@ -30,20 +31,32 @@ ALLEGRO_COLOR * rbal_color_unwrap(VALUE rself) {
   return result;
 }
 
-VALUE rbal_color_map_rgb(VALUE rself, VALUE rr, VALUE rg, VALUE rb) {
-  ALLEGRO_COLOR * result = NULL;
-  result = rbal_color_new(al_map_rgb(RBH_INT(rr), RBH_INT(rb), RBH_INT(rg)));
+/* Wraps a color struct by ways of allocating a pointer. */
+VALUE rbal_color_wrapstruct(ALLEGRO_COLOR col) {
+  ALLEGRO_COLOR * result = rbal_color_new(col);
   if(!result) return Qnil;
-  return rbal_color_wrap(result);  
+  return rbal_color_wrap(result); 
+}
+
+/* Unwraps a Color value to a struct. Will return all zero struct if
+  it had any problems unwrapping the struct. 
+*/
+ALLEGRO_COLOR rbal_color_struct(VALUE rself) {
+  ALLEGRO_COLOR  fail  = { 0.0f , 0.0f, 0.0f, 0.0f };
+  ALLEGRO_COLOR * aid  = rbal_color_unwrap(rself);
+  if (!aid) return fail;  
+  return *aid;
+}
+
+
+VALUE rbal_color_map_rgb(VALUE rself, VALUE rr, VALUE rg, VALUE rb) {
+  return rbal_color_wrap_struct(
+  al_map_rgb(RBH_INT(rr), RBH_INT(rb), RBH_INT(rg)));  
 }
 
 VALUE rbal_color_map_rgba(VALUE rself, VALUE rr, VALUE rg, VALUE rb, VALUE ra) {
-  ALLEGRO_COLOR * result = NULL;
-  ALLEGRO_COLOR aid;
-  aid     = al_map_rgba(RBH_INT(rr), RBH_INT(rb), RBH_INT(rg), RBH_INT(ra));
-  result  = rbal_color_new(aid);
-  if(!result) return Qnil;
-  return rbal_color_wrap(result);  
+  return rbal_color_wrap_struct(
+  al_map_rgba(RBH_INT(rr), RBH_INT(rb), RBH_INT(rg), RBH_INT(ra)));  
 }
 
 VALUE rbal_color_rgba(VALUE rself) {

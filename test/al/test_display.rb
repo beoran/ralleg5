@@ -10,7 +10,7 @@ assert { Al::Display }
 assert { Al::Display.flags }
 assert { Al::Display.rate }
 p Al::Display.flags
-assert { Al::Display.flags = (Al::Display.flags & Al::Display::OPENGL) }
+assert { Al::Display.flags |= Al::Display::OPENGL }
 p Al::Display.flags 
 assert { Al::Display.flags & Al::Display::OPENGL != 0 }
 

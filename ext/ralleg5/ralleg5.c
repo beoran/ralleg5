@@ -90,9 +90,10 @@ void ralleg5_system_init(VALUE mAl) {
 void Init_ralleg5() {
   mAl = rb_define_module("Al"); 
   ralleg5_system_init(mAl); 
-  ralleg5_mode_init(mAl);
+  ralleg5_mode_init(mAl);  
   ralleg5_monitor_init(mAl);
-  ralleg5_color_init(mAl); 
+  ralleg5_color_init(mAl);
+  ralleg5_bitmap_init(mAl); 
   ralleg5_display_init(mAl);
   
 }
