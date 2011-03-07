@@ -17,7 +17,6 @@ assert {  Al::Bitmap.blender }
 assert {  Al::Bitmap.blender.size == 3 } 
 assert {  Al::Bitmap.alphablender }
 assert {  Al::Bitmap.alphablender.size == 6}
- 
 
 bm = nil
 assert { bm = Al::Bitmap.new(32, 64) } 
@@ -34,6 +33,4 @@ p
 
 bm = nil
 assert { !GC.start } 
- 
-
 
