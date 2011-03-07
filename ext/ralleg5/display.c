@@ -233,18 +233,48 @@ VALUE rbal_defer_drawing(VALUE rself, VALUE rbool) {
   return rbal_defer_drawing_p(rself);
 } 
 
+/* Backbuffer */
+VALUE rbal_display_backbuffer(VALUE rself) {
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  return rbal_bitmap_wrap(al_get_backbuffer(self));
+}
 
+VALUE rbal_display_set_target(VALUE rself) {
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  al_set_target_backbuffer(self);
+  return rself;
+}
+
+/*
+AL_FUNC(void,            al_set_target_backbuffer, (ALLEGRO_DISPLAY *display));
+AL_FUNC(ALLEGRO_BITMAP*, al_get_backbuffer,    (ALLEGRO_DISPLAY *display));
+AL_FUNC(bool, al_is_compatible_bitmap, (ALLEGRO_BITMAP *bitmap));
+*/
+
+/* Drawing */
+VALUE rbal_display_clear(VALUE rself, VALUE rcolor) { 
+  al_clear_to_color(rbal_color_struct(rcolor));
+  return rself;
+}  
+
+VALUE rbal_display_draw_pixel(VALUE rself, VALUE rx, VALUE ry, VALUE rcolor) { 
+  al_draw_pixel(RBH_FLOAT(rx), RBH_FLOAT(ry), rbal_color_struct(rcolor));
+  return rself;
+}  
+
+/* Icon */
+VALUE rbal_display_icon_(VALUE rself, VALUE rbmp) {
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  ALLEGRO_BITMAP  * bmp  = rbal_bitmap_unwrap(rbmp);
+  al_set_display_icon(self, bmp);
+  return rself;
+}
 
 
 #ifdef _THIS_IS_COMMENT_
-/* Still need to implement following when ALLEGRO_COLOR and ALLEGRO_BITMAP are OK. */
+/* Still need to implement following when ALLEGRO_COLOR and ALLEGRO_BITMAP 
+and ALLEGRO_EVENT_SOURCE are OK. */
 
-AL_FUNC(void,            al_set_target_bitmap, (ALLEGRO_BITMAP *bitmap));
-AL_FUNC(void,            al_set_target_backbuffer, (ALLEGRO_DISPLAY *display));
-AL_FUNC(ALLEGRO_BITMAP*, al_get_backbuffer,    (ALLEGRO_DISPLAY *display));
-AL_FUNC(ALLEGRO_BITMAP*, al_get_target_bitmap, (void));
-
-AL_FUNC(bool, al_is_compatible_bitmap, (ALLEGRO_BITMAP *bitmap));
 AL_FUNC(ALLEGRO_EVENT_SOURCE *, al_get_display_event_source, (ALLEGRO_DISPLAY *display));
 
 /* Primitives */
@@ -346,9 +376,13 @@ void ralleg5_display_init(VALUE mAl) {
   rb_define_method(cDisplay, "position"    , rbal_display_position, 0);
   rb_define_method(cDisplay, "position_set", rbal_display_position_, 2);
   rb_define_method(cDisplay, "title="      , rbal_display_title_   , 1);
+  rb_define_method(cDisplay, "icon="       , rbal_display_icon_    , 1);  
   
   rb_define_singleton_method(cDisplay, "defer?", rbal_defer_drawing_p, 0);
   rb_define_singleton_method(cDisplay, "defer!", rbal_defer_drawing, 1);
+  rb_define_singleton_method(cDisplay, "clear_to", rbal_display_clear , 1);
+  rb_define_singleton_method(cDisplay, "putpixel", rbal_display_draw_pixel , 3);
+  
   
   rb_define_method(cDisplay, "destroy", rbal_destroy_display, 0);
   rb_define_method(cDisplay, "destroy?", rbal_display_destroyed_p, 0);
@@ -358,8 +392,11 @@ void ralleg5_display_init(VALUE mAl) {
   rb_define_method(cDisplay, "rate"    , rbal_display_refresh_rate, 0);
   rb_define_method(cDisplay, "flags"   , rbal_display_flags, 0);
   rb_define_method(cDisplay, "toggle_flag", rbal_display_toggle_flag, 2);
-    
-}  
+  rb_define_method(cDisplay, "backbuffer" , rbal_display_backbuffer , 0);
+  rb_define_method(cDisplay, "target!"    , rbal_display_set_target , 0);
+  
+}
+
 
 
 

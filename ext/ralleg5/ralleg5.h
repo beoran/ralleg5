@@ -17,10 +17,16 @@ extern VALUE rb_str_to_utf8(VALUE text);
 /* Unwraps a Color value to a struct. 
 Will return an all zero struct if it had any problems unwrapping the struct. 
 */
-ALLEGRO_COLOR rbal_color_struct(VALUE rself);
+extern ALLEGRO_COLOR rbal_color_struct(VALUE rself);
 
 /* Wraps a color struct by ways of allocating a pointer. */
-VALUE rbal_color_wrapstruct(ALLEGRO_COLOR col);
+extern VALUE rbal_color_wrapstruct(ALLEGRO_COLOR col);
+
+/* Wraps an ALLEGRO_BITMAP into a ruby VALUE */
+extern VALUE rbal_bitmap_wrap(ALLEGRO_BITMAP * ptr); 
+
+/* Unwraps an ALLEGRO_BITMAP from a ruby VALUE */
+extern ALLEGRO_BITMAP * rbal_bitmap_unwrap(VALUE rself);
 
 
 

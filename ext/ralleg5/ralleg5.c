@@ -49,6 +49,7 @@ VALUE rbal_inhibit_screensaver(VALUE rself, VALUE rinhibit) {
 } 
 
 
+
 /*
 AL_FUNC(bool, al_install_system, (int version, int (*atexit_ptr)(void (*)(void))));
 AL_FUNC(void, al_uninstall_system, (void));

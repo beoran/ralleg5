@@ -363,8 +363,22 @@ VALUE rbal_bitmap_unlock(VALUE rself) {
   return rself;  
 }
 
+/* Taget bitmap. */
 
-AL_FUNC(void, al_unlock_bitmap, (ALLEGRO_BITMAP *bitmap));
+VALUE rbal_target_bitmap(VALUE rself) {
+  return rbal_bitmap_wrap(al_get_target_bitmap());
+}
+
+VALUE rbal_bitmap_target_x(VALUE rself) {
+  ALLEGRO_BITMAP * self = rbal_bitmap_unwrap(rself);    
+  al_set_target_bitmap(self);
+  return rself;
+}
+
+VALUE rbal_bitmap_compatible_p(VALUE rself) {
+  ALLEGRO_BITMAP * self = rbal_bitmap_unwrap(rself);    
+  return RBH_INT_BOOL(al_is_compatible_bitmap_bitmap(self));
+}
 
 
 
@@ -512,6 +526,10 @@ void ralleg5_bitmap_init(VALUE mAl) {
   rb_define_method(cBitmap, "lock!"        , rbal_bitmap_lock, 2);
   rb_define_method(cBitmap, "lock_region!" , rbal_bitmap_lock, 6);
   rb_define_method(cBitmap, "unlock!"      , rbal_bitmap_unlock, 0);
+  rb_define_method(cBitmap, "target!"      , rbal_bitmap_target_x, 0);
+  rb_define_method(cBitmap, "compatible?"      , rbal_bitmap_compatible_p, 0);  
+  rb_define_singleton_method(cBitmap, "target", rbal_target_bitmap, 0);
+  
   
   rb_define_singleton_method(cBitmap, "setblender", rbal_set_blender, 3);
   rb_define_singleton_method(cBitmap, "blender"   , rbal_get_blender, 0);
