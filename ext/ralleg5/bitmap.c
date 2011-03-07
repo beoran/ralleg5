@@ -1,5 +1,58 @@
 #include "ralleg5.h"
 
+
+static VALUE cLock;
+
+void rbal_lock_free(ALLEGRO_LOCKED_REGION * ptr) {
+  free(ptr);
+}
+
+ALLEGRO_LOCKED_REGION * rbal_lock_alloc() {
+  return calloc(sizeof(ALLEGRO_LOCKED_REGION), 1);
+}
+
+VALUE rbal_lock_wrap(ALLEGRO_LOCKED_REGION * ptr) {
+   if(!ptr) return Qnil;
+   // Locks are managed by Allegro, so Ruby doens't need to erase them.
+   return Data_Wrap_Struct(cLock, 0, 0, ptr);
+}
+
+ALLEGRO_LOCKED_REGION * rbal_lock_unwrap(VALUE rself) {
+  ALLEGRO_LOCKED_REGION * result;
+  if (rself == Qnil) return NULL;
+  Data_Get_Struct(rself, ALLEGRO_LOCKED_REGION, result);
+  return result;
+}
+
+VALUE rbal_lock_format(VALUE rself) {
+  ALLEGRO_LOCKED_REGION * self = rbal_lock_unwrap(rself);
+  if(!self) return Qnil;
+  return RBH_INT_NUM(self->format);
+}
+
+VALUE rbal_lock_pitch(VALUE rself) {
+  ALLEGRO_LOCKED_REGION * self = rbal_lock_unwrap(rself);
+  if(!self) return Qnil;
+  return RBH_INT_NUM(self->pitch);
+}
+
+VALUE rbal_lock_pixel_size(VALUE rself) {
+  ALLEGRO_LOCKED_REGION * self = rbal_lock_unwrap(rself);
+  if(!self) return Qnil;
+  return RBH_INT_NUM(self->pixel_size);
+}
+
+
+void ralleg5_lock_init(VALUE mAl) {
+  cLock = rb_define_class_under(mAl, "Lock", rb_cObject);
+  rb_define_method(cLock, "format"       , rbal_lock_format	, 0);
+  rb_define_method(cLock, "pitch"        , rbal_lock_pitch	, 0);
+  rb_define_method(cLock, "pixelsize"    , rbal_lock_pixel_size	, 0);
+}  
+
+
+
+
 static VALUE cBitmap;
 
 
@@ -286,8 +339,37 @@ VALUE rbal_get_separate_blender(VALUE rself) {
 }
 
 
+/* Locking */
+
+VALUE rbal_bitmap_lock(VALUE rself, VALUE rformat, VALUE rflags) {
+  ALLEGRO_BITMAP * self = rbal_bitmap_unwrap(rself);
+  ALLEGRO_LOCKED_REGION * result = NULL;
+  result = al_lock_bitmap(self, RBH_INT(rformat), RBH_INT(rflags));
+  return rbal_lock_wrap(result);  
+}
+
+VALUE rbal_bitmap_lock_region(VALUE rself, VALUE rx, VALUE ry, VALUE rw, VALUE rh, VALUE rformat, VALUE rflags) {
+  ALLEGRO_BITMAP * self = rbal_bitmap_unwrap(rself);
+  ALLEGRO_LOCKED_REGION * result = NULL;
+  result = al_lock_bitmap_region(self,  RBH_INT(rx), RBH_INT(ry), 
+                                 RBH_INT(rw), RBH_INT(rh),
+                                 RBH_INT(rformat), RBH_INT(rflags));
+  return rbal_lock_wrap(result);  
+}
+
+VALUE rbal_bitmap_unlock(VALUE rself) {
+  ALLEGRO_BITMAP * self = rbal_bitmap_unwrap(rself);  
+  al_unlock_bitmap(self);
+  return rself;  
+}
+
+
+AL_FUNC(void, al_unlock_bitmap, (ALLEGRO_BITMAP *bitmap));
+
+
 
 void ralleg5_bitmap_init(VALUE mAl) {
+  ralleg5_lock_init(mAl);
   cBitmap = rb_define_class_under(mAl, "Bitmap", rb_cObject);
   rb_define_const(cBitmap, "FORMAT_ANY"
                          ,  UINT2NUM(ALLEGRO_PIXEL_FORMAT_ANY));
@@ -427,6 +509,9 @@ void ralleg5_bitmap_init(VALUE mAl) {
   rb_define_method(cBitmap, "sub"   , rbal_bitmap_sub, 4);
   rb_define_method(cBitmap, "clone" , rbal_bitmap_clone, 1);
   rb_define_method(cBitmap, "lock?" , rbal_bitmap_lock_p, 0);
+  rb_define_method(cBitmap, "lock!"        , rbal_bitmap_lock, 2);
+  rb_define_method(cBitmap, "lock_region!" , rbal_bitmap_lock, 6);
+  rb_define_method(cBitmap, "unlock!"      , rbal_bitmap_unlock, 0);
   
   rb_define_singleton_method(cBitmap, "setblender", rbal_set_blender, 3);
   rb_define_singleton_method(cBitmap, "blender"   , rbal_get_blender, 0);

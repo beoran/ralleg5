@@ -31,6 +31,15 @@ assert { bm.flags == Al::Bitmap.flags }
 p bm.flags
 p 
 
+assert { Al::Lock } 
+assert { !bm.lock? } 
+lo = nil
+assert { lo = bm.lock!(0, 0)} 
+assert { lo.class == Al::Lock } 
+assert { bm.lock? } 
+assert { bm.unlock! } 
+assert { !bm.lock? } 
+
 bm = nil
 assert { !GC.start } 
 

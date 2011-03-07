@@ -21,7 +21,7 @@ VALUE rbal_mode_wrap(ALLEGRO_DISPLAY_MODE * ptr) {
 ALLEGRO_DISPLAY_MODE * rbal_mode_unwrap(VALUE rself) {
   ALLEGRO_DISPLAY_MODE * result;
   if (rself == Qnil) return NULL;
-  Data_Get_Struct(rself, ALLEGRO_DISPLAY_MODE*, result);
+  Data_Get_Struct(rself, ALLEGRO_DISPLAY_MODE, result);
   return result;
 }
 
