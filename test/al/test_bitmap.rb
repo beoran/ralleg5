@@ -35,6 +35,9 @@ assert { Al::Lock }
 assert { !bm.lock? } 
 lo = nil
 assert { lo = bm.lock!(0, 0)} 
+assert { lo.format } 
+assert { lo.pixelsize } 
+assert { lo.pitch } 
 assert { lo.class == Al::Lock } 
 assert { bm.lock? } 
 assert { bm.unlock! } 
