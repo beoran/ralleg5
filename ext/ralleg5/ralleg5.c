@@ -5,7 +5,17 @@
 static VALUE mAl;
 
 
+/*Utility functions */
+
+/* Converts a ruby string to utf-8 */
+VALUE rb_str_to_utf8(VALUE text) { 
+  return rb_str_export_to_enc(text, rb_utf8_encoding());
+}
+
+
+
 /** Suystem functions from system.h */
+
 
 /**
 * @overload version
@@ -79,8 +89,12 @@ void ralleg5_system_init(VALUE mAl) {
 /** Entry point for Ruby. */
 void Init_ralleg5() {
   mAl = rb_define_module("Al"); 
-  ralleg5_system_init(mAl);  
+  ralleg5_system_init(mAl); 
+  ralleg5_mode_init(mAl);
+  ralleg5_monitor_init(mAl);
+  ralleg5_color_init(mAl); 
   ralleg5_display_init(mAl);
+  
 }
 
 

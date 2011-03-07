@@ -2,301 +2,262 @@
 
 static VALUE cDisplay;
 
-static VALUE cMode; 
 
-static VALUE cMonitor; 
+/* The display itself is wrapped indirectly. */
+struct RBAL_DISPLAY_ {
+  ALLEGRO_DISPLAY * ptr;
+};
+ 
+typedef struct RBAL_DISPLAY_ RBAL_DISPLAY;
 
-ALLEGRO_DISPLAY_MODE *rbal_mode_alloc() {
-  return calloc(sizeof(ALLEGRO_DISPLAY_MODE), 1);
+/* Allocates the display wrapper */
+RBAL_DISPLAY * rbal_display_alloc() {
+  return calloc(sizeof(RBAL_DISPLAY), 1); 
 }
 
-void rbal_mode_free(ALLEGRO_DISPLAY_MODE * ptr) {
-  free(ptr);
+/* Returns nonzero if the wrapped pointer has been destroyed, zero if not.*/
+int rbal_display_free_p(RBAL_DISPLAY * disp) {
+  if (!disp) return !0;
+  if (!disp->ptr) return !0;
+  return 0;
+} 
+
+/* Frees the display wrapper, and the enclosed display if needed. */
+void rbal_display_free(RBAL_DISPLAY * disp) {
+  if(rbal_display_free_p(disp)) return;
+  al_destroy_display(disp->ptr);
+  disp->ptr = NULL;
 }
 
-VALUE rbal_mode_wrap(ALLEGRO_DISPLAY_MODE * ptr) {
-   if(!ptr) return Qnil;
-   return Data_Wrap_Struct(cMode, 0, rbal_mode_free, ptr);
-}
-  
-ALLEGRO_DISPLAY_MODE * rbal_mode_unwrap(VALUE rself) {
-  ALLEGRO_DISPLAY_MODE * result;
-  if (rself == Qnil) return NULL;
-  Data_Get_Struct(rself, ALLEGRO_DISPLAY_MODE*, result);
-  return result;
+/* Initializes the display wrapper */
+RBAL_DISPLAY * rbal_display_init(RBAL_DISPLAY * disp, ALLEGRO_DISPLAY * ptr) {
+  if (!disp) return NULL;
+  disp->ptr = ptr; 
+  return disp;
 }
 
-VALUE rbal_mode_width(VALUE rself) {
-  ALLEGRO_DISPLAY_MODE * mode = rbal_mode_unwrap(rself);
-  return RBH_INT_NUM(mode->width);
-}
-
-VALUE rbal_mode_height(VALUE rself) {
-  ALLEGRO_DISPLAY_MODE * mode = rbal_mode_unwrap(rself);
-  return RBH_INT_NUM(mode->height);
-}
-
-VALUE rbal_mode_format(VALUE rself) {
-  ALLEGRO_DISPLAY_MODE * mode = rbal_mode_unwrap(rself);
-  return RBH_INT_NUM(mode->format);
-}
-
-VALUE rbal_mode_refresh_rate(VALUE rself) {
-  ALLEGRO_DISPLAY_MODE * mode = rbal_mode_unwrap(rself);
-  return RBH_INT_NUM(mode->refresh_rate);
-}
-
-VALUE rbal_mode_amount(VALUE rself) {
-  return RBH_INT_NUM(al_get_num_display_modes());
-}  
-
-VALUE rbal_mode_get(VALUE rself, VALUE rindex) {
-  ALLEGRO_DISPLAY_MODE * mode = rbal_mode_alloc();
-  if(!mode) return Qnil;
-  al_get_display_mode(RBH_INT(rindex), mode);
-  return  rbal_mode_wrap(mode);
-}
-
-
-ALLEGRO_MONITOR_INFO *rbal_monitor_alloc() {
-  return calloc(sizeof(ALLEGRO_MONITOR_INFO), 1);
-}
-
-void rbal_monitor_free(ALLEGRO_MONITOR_INFO * ptr) {
-  free(ptr);
-}
-
-VALUE rbal_monitor_wrap(ALLEGRO_MONITOR_INFO * ptr) {
-   if(!ptr) return Qnil;
-   return Data_Wrap_Struct(cMonitor, 0, rbal_monitor_free, ptr);
-}
-  
-ALLEGRO_MONITOR_INFO * rbal_monitor_unwrap(VALUE rself) {
-  ALLEGRO_MONITOR_INFO * result;
-  if (rself == Qnil) return NULL;
-  Data_Get_Struct(rself, ALLEGRO_MONITOR_INFO*, result);
-  return result;
-}
-
-VALUE rbal_monitor_x1(VALUE rself) {
-  ALLEGRO_MONITOR_INFO * self = rbal_mode_unwrap(rself);
-  return RBH_INT_NUM(self->x1);
-}
-
-VALUE rbal_monitor_x2(VALUE rself) {
-  ALLEGRO_MONITOR_INFO * self = rbal_mode_unwrap(rself);
-  return RBH_INT_NUM(self->x2);
-}
-
-VALUE rbal_monitor_y1(VALUE rself) {
-  ALLEGRO_MONITOR_INFO * self = rbal_mode_unwrap(rself);
-  return RBH_INT_NUM(self->y1);
-}
-
-VALUE rbal_monitor_y2(VALUE rself) {
-  ALLEGRO_MONITOR_INFO * self = rbal_mode_unwrap(rself);
-  return RBH_INT_NUM(self->y2);
+/* Allocates and frees the display wrapper. */
+RBAL_DISPLAY * rbal_display_new(ALLEGRO_DISPLAY * ptr) {
+  RBAL_DISPLAY * disp = rbal_display_alloc();  
+  if(!rbal_display_init(disp, ptr)) {
+    rbal_display_free(disp);
+    return NULL;
+  }
+  return disp;
 }
 
 
 VALUE rbal_display_wrap(ALLEGRO_DISPLAY * ptr) {
+   RBAL_DISPLAY * disp = NULL;
    if(!ptr) return Qnil;
-   return Data_Wrap_Struct(cDisplay, 0, al_destroy_display, ptr);
+   disp = rbal_display_new(ptr);
+   if(!disp) return Qnil;
+   return Data_Wrap_Struct(cDisplay, 0, rbal_display_free, disp);
 }
 
-ALLEGRO_DISPLAY * rbal_display_unwrap(VALUE rdisplay) {
-  ALLEGRO_DISPLAY * result;
-  if (rdisplay == Qnil) return NULL;
-  Data_Get_Struct(rdisplay, ALLEGRO_DISPLAY*, result);
-  return result;
+RBAL_DISPLAY * rbal_display_unwrap_wrapper(VALUE rdisplay) {
+  RBAL_DISPLAY * disp = NULL;
+  if (rdisplay == Qnil) { return NULL; } 
+  Data_Get_Struct(rdisplay, RBAL_DISPLAY, disp);
+  return disp;
 }  
 
-rbal_create_display(VALUE rself, VALUE rw, VALUE rh) {
+ALLEGRO_DISPLAY * rbal_display_unwrap(VALUE rdisplay) {
+  RBAL_DISPLAY * disp = NULL;
+  disp = rbal_display_unwrap_wrapper(rdisplay);
+  if (!disp) return NULL;
+  return disp->ptr;
+}  
+
+VALUE rbal_create_display(VALUE rself, VALUE rw, VALUE rh) {
   return rbal_display_wrap(al_create_display(RBH_INT(rw), RBH_INT(rh)));
 }
 
-rbal_destroy_display(VALUE rself) { 
-  ALLEGRO_DISPLAY * display = rbal_display_unwrap(rself);
-  al_destroy_display(display);
-  return Qnil;
+VALUE rbal_current_display(VALUE rself) {
+  return rbal_display_wrap(al_get_current_display());
+}
+
+VALUE rbal_destroy_display(VALUE rself) {   
+  RBAL_DISPLAY * display = rbal_display_unwrap_wrapper(rself);
+  if(rbal_display_free_p(display)) return Qfalse;
+  rbal_display_free(display);
+  return Qtrue;    
+}  
+
+VALUE rbal_display_destroyed_p(VALUE rself) { 
+  RBAL_DISPLAY * display = rbal_display_unwrap_wrapper(rself);
+  return RBH_INT_BOOL(rbal_display_free_p(display)); 
+}  
+
+VALUE rbal_display_width(VALUE rself) { 
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  if(!self) return Qnil;
+  return RBH_INT_NUM(al_get_display_width(self));
+}
+  
+VALUE rbal_display_height(VALUE rself) { 
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  if(!self) return Qnil;
+  return RBH_INT_NUM(al_get_display_height(self));
+}
+  
+VALUE rbal_display_format(VALUE rself) { 
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  if(!self) return Qnil;
+  return RBH_INT_NUM(al_get_display_format(self));
+}
+
+VALUE rbal_display_refresh_rate(VALUE rself) { 
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  if(!self) return Qnil;
+  return RBH_INT_NUM(al_get_display_refresh_rate(self));
+}
+
+VALUE rbal_display_flags(VALUE rself) { 
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  if(!self) return Qnil;
+  return RBH_INT_NUM(al_get_display_flags(self));
+}
+
+VALUE rbal_display_toggle_flag(VALUE rself, VALUE rindex, VALUE rbool) { 
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  if(!self) return Qnil;
+  return RBH_INT_BOOL(al_toggle_display_flag(self, RBH_INT(rindex), RBH_BOOL_INT(rbool)));
+}
+
+VALUE rbal_new_display_refresh_rate(VALUE rself) { 
+  return RBH_INT_NUM(al_get_new_display_refresh_rate());
+}  
+
+VALUE rbal_new_display_flags(VALUE rself) { 
+  return RBH_INT_NUM(al_get_new_display_flags());
+}  
+
+VALUE rbal_new_display_refresh_rate_(VALUE rself, VALUE rrate) {
+  al_set_new_display_refresh_rate(RBH_INT(rrate));
+  return rbal_new_display_refresh_rate(rself);
+}  
+
+VALUE rbal_new_display_flags_(VALUE rself, VALUE rflags) {
+  al_set_new_display_flags(RBH_INT(rflags)); 
+  return RBH_INT_NUM(al_get_new_display_flags());
+}  
+
+VALUE rbal_new_display_option(VALUE rself, VALUE roption) { 
+   int res, importance;
+   res = al_get_new_display_option(RBH_INT(roption), &importance);
+   /* NOTE: also return importance?*/
+   return RBH_INT_NUM(res); 
+}   
+
+VALUE rbal_new_display_option_(VALUE rself, VALUE ropt, VALUE rv, VALUE rim) { 
+   int importance;
+   importance = (rim == Qnil) ? ALLEGRO_SUGGEST : RBH_INT(rim);
+   al_set_new_display_option(RBH_INT(ropt), RBH_INT(rv), importance);   
+   return rbal_new_display_option(rself, ropt); 
+}   
+
+VALUE rbal_new_display_option_reset(VALUE rself) {
+   al_reset_new_display_options(); 
+   return Qtrue; 
+}   
+
+VALUE rbal_acknowledge_resize(VALUE rself) { 
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  if(!self) return Qnil;
+  return RBH_INT_BOOL(al_acknowledge_resize(self));  
+}
+
+VALUE rbal_display_resize(VALUE rself, VALUE rw, VALUE rh) { 
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  if(!self) return Qnil;
+  return RBH_INT_BOOL(al_resize_display(self, RBH_INT(rw), RBH_INT(rh)));  
+}
+
+VALUE rbal_flip_display(VALUE rself) {
+  al_flip_display();
+  return Qtrue;
+}
+
+VALUE rbal_update_region(VALUE rself, VALUE rx, VALUE ry, VALUE rw, VALUE rh) {
+  al_update_display_region(RBH_INT(rx), RBH_INT(ry), RBH_INT(rw), RBH_INT(rh));
+  return Qtrue;
+}
+
+VALUE rbal_vsync(VALUE rself) {
+  al_wait_for_vsync();
+  return Qtrue;
+}
+
+VALUE rbal_new_window_position(VALUE rself) {
+  int x = 0, y = 0;
+  al_get_new_window_position(&x, &y);
+  return rb_ary_new3(2, RBH_INT_NUM(x), RBH_INT_NUM(y));
+}  
+
+VALUE rbal_new_window_position_(VALUE rself, VALUE rx, VALUE ry) {
+  al_set_new_window_position(RBH_INT(rx), RBH_INT(ry));
+  return rbal_new_window_position(rself);
+}  
+
+VALUE rbal_display_position(VALUE rself) {
+  int x = 0, y = 0;
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  if(!self) return Qnil;
+  al_get_window_position(self, &x, &y);  
+  return rb_ary_new3(2, RBH_INT_NUM(x), RBH_INT_NUM(y));
+}  
+
+VALUE rbal_display_position_(VALUE rself, VALUE rx, VALUE ry) {
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  if(!self) return Qnil;
+  al_set_window_position(self, RBH_INT(rx), RBH_INT(ry));
+  return rbal_new_window_position(rself);
+}  
+
+VALUE rbal_display_title_(VALUE rself, VALUE rtitle) {
+  ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
+  char * utf8            = RSTRING_PTR(rb_str_to_utf8(rtitle));
+  if(!self) return Qnil;
+  al_set_window_title(self, utf8);
+  return Qtrue;
 }  
 
 
+VALUE rbal_defer_drawing_p(VALUE rself) {
+  return RBH_INT_BOOL(al_is_bitmap_drawing_held());
+} 
+
+VALUE rbal_defer_drawing(VALUE rself, VALUE rbool) {
+  al_hold_bitmap_drawing(RBH_BOOL_INT(rbool));
+  return rbal_defer_drawing_p(rself);
+} 
+
+
+
+
 #ifdef _THIS_IS_COMMENT_
+/* Still need to implement following when ALLEGRO_COLOR and ALLEGRO_BITMAP are OK. */
 
-/* Possible parameters for al_set_display_option.
- * Make sure to update ALLEGRO_EXTRA_DISPLAY_SETTINGS if you modify
- * anything here.
- */
-enum ALLEGRO_DISPLAY_OPTIONS {
-   ALLEGRO_RED_SIZE,
-   ALLEGRO_GREEN_SIZE,
-   ALLEGRO_BLUE_SIZE,
-   ALLEGRO_ALPHA_SIZE,
-   ALLEGRO_RED_SHIFT,
-   ALLEGRO_GREEN_SHIFT,
-   ALLEGRO_BLUE_SHIFT,
-   ALLEGRO_ALPHA_SHIFT,
-   ALLEGRO_ACC_RED_SIZE,
-   ALLEGRO_ACC_GREEN_SIZE,
-   ALLEGRO_ACC_BLUE_SIZE,
-   ALLEGRO_ACC_ALPHA_SIZE,
-   ALLEGRO_STEREO,
-   ALLEGRO_AUX_BUFFERS,
-   ALLEGRO_COLOR_SIZE,
-   ALLEGRO_DEPTH_SIZE,
-   ALLEGRO_STENCIL_SIZE,
-   ALLEGRO_SAMPLE_BUFFERS,
-   ALLEGRO_SAMPLES,
-   ALLEGRO_RENDER_METHOD,
-   ALLEGRO_FLOAT_COLOR,
-   ALLEGRO_FLOAT_DEPTH,
-   ALLEGRO_SINGLE_BUFFER,
-   ALLEGRO_SWAP_METHOD,
-   ALLEGRO_COMPATIBLE_DISPLAY,
-   ALLEGRO_UPDATE_DISPLAY_REGION,
-   ALLEGRO_VSYNC,
-   ALLEGRO_MAX_BITMAP_SIZE,
-   ALLEGRO_SUPPORT_NPOT_BITMAP,
-   ALLEGRO_CAN_DRAW_INTO_BITMAP,
-   ALLEGRO_SUPPORT_SEPARATE_ALPHA,
-   ALLEGRO_DISPLAY_OPTIONS_COUNT
-};
-
-enum
-{
-   ALLEGRO_DONTCARE,
-   ALLEGRO_REQUIRE,
-   ALLEGRO_SUGGEST
-};
-
-
-enum ALLEGRO_DISPLAY_ORIENTATION
-{
-   ALLEGRO_DISPLAY_ORIENTATION_0_DEGREES,
-   ALLEGRO_DISPLAY_ORIENTATION_90_DEGREES,
-   ALLEGRO_DISPLAY_ORIENTATION_180_DEGREES,
-   ALLEGRO_DISPLAY_ORIENTATION_270_DEGREES,
-   ALLEGRO_DISPLAY_ORIENTATION_FACE_UP,
-   ALLEGRO_DISPLAY_ORIENTATION_FACE_DOWN
-};
-
-
-/* Type: ALLEGRO_DISPLAY
- */
-typedef struct ALLEGRO_DISPLAY ALLEGRO_DISPLAY;
-
-
-/* Type: ALLEGRO_DISPLAY_MODE
- */
-typedef struct ALLEGRO_DISPLAY_MODE
-{
-   int width;
-   int height;
-   int format;
-   int refresh_rate;
-} ALLEGRO_DISPLAY_MODE;
-
-
-/* Type: ALLEGRO_MONITOR_INFO
- */
-typedef struct ALLEGRO_MONITOR_INFO
-{
-   int x1;
-   int y1;
-   int x2;
-   int y2;
-} ALLEGRO_MONITOR_INFO;
-
-
-enum {
-   ALLEGRO_DEFAULT_DISPLAY_ADAPTER = -1
-};
-
-
-AL_FUNC(void, al_set_new_display_refresh_rate, (int refresh_rate));
-AL_FUNC(void, al_set_new_display_flags, (int flags));
-AL_FUNC(int,  al_get_new_display_refresh_rate, (void));
-AL_FUNC(int,  al_get_new_display_flags, (void));
-
-AL_FUNC(int, al_get_display_width,  (ALLEGRO_DISPLAY *display));
-AL_FUNC(int, al_get_display_height, (ALLEGRO_DISPLAY *display));
-AL_FUNC(int, al_get_display_format, (ALLEGRO_DISPLAY *display));
-AL_FUNC(int, al_get_display_refresh_rate, (ALLEGRO_DISPLAY *display));
-AL_FUNC(int, al_get_display_flags,  (ALLEGRO_DISPLAY *display));
-AL_FUNC(bool, al_toggle_display_flag, (ALLEGRO_DISPLAY *display, int flag, bool onoff));
-
-AL_FUNC(ALLEGRO_DISPLAY*, al_create_display, (int w, int h));
-AL_FUNC(void,             al_destroy_display, (ALLEGRO_DISPLAY *display));
-AL_FUNC(ALLEGRO_DISPLAY*, al_get_current_display, (void));
 AL_FUNC(void,            al_set_target_bitmap, (ALLEGRO_BITMAP *bitmap));
 AL_FUNC(void,            al_set_target_backbuffer, (ALLEGRO_DISPLAY *display));
 AL_FUNC(ALLEGRO_BITMAP*, al_get_backbuffer,    (ALLEGRO_DISPLAY *display));
 AL_FUNC(ALLEGRO_BITMAP*, al_get_target_bitmap, (void));
 
-AL_FUNC(bool, al_acknowledge_resize, (ALLEGRO_DISPLAY *display));
-AL_FUNC(bool, al_resize_display,     (ALLEGRO_DISPLAY *display, int width, int height));
-AL_FUNC(void, al_flip_display,       (void));
-AL_FUNC(void, al_update_display_region, (int x, int y, int width, int height));
 AL_FUNC(bool, al_is_compatible_bitmap, (ALLEGRO_BITMAP *bitmap));
-
-AL_FUNC(int, al_get_num_display_modes, (void));
-AL_FUNC(ALLEGRO_DISPLAY_MODE*, al_get_display_mode, (int index,
-        ALLEGRO_DISPLAY_MODE *mode));
-
-AL_FUNC(bool, al_wait_for_vsync, (void));
-
 AL_FUNC(ALLEGRO_EVENT_SOURCE *, al_get_display_event_source, (ALLEGRO_DISPLAY *display));
 
 /* Primitives */
 AL_FUNC(void, al_clear_to_color, (ALLEGRO_COLOR color));
 AL_FUNC(void, al_draw_pixel, (float x, float y, ALLEGRO_COLOR color));
-
 AL_FUNC(void, al_set_display_icon, (ALLEGRO_DISPLAY *display, ALLEGRO_BITMAP *icon));
 
-/* Stuff for multihead/window management */
-AL_FUNC(int, al_get_num_video_adapters, (void));
-AL_FUNC(bool, al_get_monitor_info, (int adapter, ALLEGRO_MONITOR_INFO *info));
-AL_FUNC(int, al_get_new_display_adapter, (void));
-AL_FUNC(void, al_set_new_display_adapter, (int adapter));
-AL_FUNC(void, al_set_new_window_position, (int x, int y));
-AL_FUNC(void, al_get_new_window_position, (int *x, int *y));
-AL_FUNC(void, al_set_window_position, (ALLEGRO_DISPLAY *display, int x, int y));
-AL_FUNC(void, al_get_window_position, (ALLEGRO_DISPLAY *display, int *x, int *y));
-
-AL_FUNC(void, al_set_window_title, (ALLEGRO_DISPLAY *display, const char *title));
-
-/* Defined in display_settings.c */
-AL_FUNC(void, al_set_new_display_option, (int option, int value, int importance));
-AL_FUNC(int, al_get_new_display_option, (int option, int *importance));
-AL_FUNC(void, al_reset_new_display_options, (void));
-AL_FUNC(int, al_get_display_option, (ALLEGRO_DISPLAY *display, int option));
-
-/*Deferred drawing*/
-AL_FUNC(void, al_hold_bitmap_drawing, (bool hold));
-AL_FUNC(bool, al_is_bitmap_drawing_held, (void));
 
 #endif
 
 
 void ralleg5_display_init(VALUE mAl) {
-  cDisplay = rb_define_class_under(mAl, "Display", rb_cObject);
-  cMode    = rb_define_class_under(mAl, "Mode"   , rb_cObject);
-  cMonitor = rb_define_class_under(mAl, "Monitor", rb_cObject);
-  
-  rb_define_method(cMode, "width" , rbal_mode_width, 0);  
-  rb_define_method(cMode, "height", rbal_mode_height, 0);  
-  rb_define_method(cMode, "format", rbal_mode_format, 0);  
-  rb_define_method(cMode, "rate"  , rbal_mode_refresh_rate, 0);  
-  rb_define_singleton_method(cMode, "amount", rbal_mode_amount, 0);
-  rb_define_singleton_method(cMode, "get"   , rbal_mode_get   , 1);
-  
-  rb_define_method(cMonitor, "x1", rbal_monitor_x1  , 0);
-  rb_define_method(cMonitor, "x2", rbal_monitor_x2  , 0);  
-  rb_define_method(cMonitor, "y1", rbal_monitor_y1  , 0);  
-  rb_define_method(cMonitor, "y2", rbal_monitor_y2  , 0);  
-  
-  
+  cDisplay = rb_define_class_under(mAl, "Display", rb_cObject); 
   rb_define_const(cDisplay , "WINDOWED"  	, UINT2NUM(ALLEGRO_WINDOWED));
   rb_define_const(cDisplay , "FULLSCREEN"	, UINT2NUM(ALLEGRO_FULLSCREEN));
   rb_define_const(cDisplay , "OPENGL"   	, UINT2NUM(ALLEGRO_OPENGL));
@@ -307,10 +268,98 @@ void ralleg5_display_init(VALUE mAl) {
   rb_define_const(cDisplay , "OPENGL3" 	, UINT2NUM(ALLEGRO_OPENGL_3_0));
   rb_define_const(cDisplay , "OPENGL_COMPAT"	, UINT2NUM(ALLEGRO_OPENGL_FORWARD_COMPATIBLE));
   rb_define_const(cDisplay , "FULLSCREEN_WINDOW", UINT2NUM(ALLEGRO_FULLSCREEN_WINDOW));
+  rb_define_const(cDisplay , "RED_SIZE", UINT2NUM(ALLEGRO_RED_SIZE));
+  rb_define_const(cDisplay , "GREEN_SIZE", UINT2NUM(ALLEGRO_GREEN_SIZE));
+  rb_define_const(cDisplay , "BLUE_SIZE", UINT2NUM(ALLEGRO_BLUE_SIZE));
+  rb_define_const(cDisplay , "ALPHA_SIZE", UINT2NUM(ALLEGRO_ALPHA_SIZE));
+  rb_define_const(cDisplay , "RED_SHIFT", UINT2NUM(ALLEGRO_RED_SHIFT));  
+  rb_define_const(cDisplay , "GREEN_SHIFT", UINT2NUM(ALLEGRO_GREEN_SHIFT));
+  rb_define_const(cDisplay , "BLUE_SHIFT", UINT2NUM(ALLEGRO_BLUE_SHIFT));
+  rb_define_const(cDisplay , "ALPHA_SHIFT", UINT2NUM(ALLEGRO_ALPHA_SHIFT));
+  rb_define_const(cDisplay , "ACC_RED_SIZE", UINT2NUM(ALLEGRO_ACC_RED_SIZE));
+  rb_define_const(cDisplay , "ACC_GREEN_SIZE", UINT2NUM(ALLEGRO_ACC_GREEN_SIZE));
+  rb_define_const(cDisplay , "ACC_BLUE_SIZE", UINT2NUM(ALLEGRO_ACC_BLUE_SIZE));
+  rb_define_const(cDisplay , "ACC_ALPHA_SIZE", UINT2NUM(ALLEGRO_ACC_ALPHA_SIZE));
+  rb_define_const(cDisplay , "STEREO", UINT2NUM(ALLEGRO_STEREO));
+  rb_define_const(cDisplay , "AUX_BUFFERS", UINT2NUM(ALLEGRO_AUX_BUFFERS));
+  rb_define_const(cDisplay , "COLOR_SIZE", UINT2NUM(ALLEGRO_COLOR_SIZE));
+  rb_define_const(cDisplay , "DEPTH_SIZE", UINT2NUM(ALLEGRO_DEPTH_SIZE));
+  rb_define_const(cDisplay , "STENCIL_SIZE", UINT2NUM(ALLEGRO_STENCIL_SIZE));
+  rb_define_const(cDisplay , "SAMPLE_BUFFERS", UINT2NUM(ALLEGRO_SAMPLE_BUFFERS));
+  rb_define_const(cDisplay , "SAMPLES", UINT2NUM(ALLEGRO_SAMPLES));
+  rb_define_const(cDisplay , "RENDER_METHOD", UINT2NUM(ALLEGRO_RENDER_METHOD));
+  rb_define_const(cDisplay , "FLOAT_COLOR", UINT2NUM(ALLEGRO_FLOAT_COLOR));
+  rb_define_const(cDisplay , "FLOAT_DEPTH", UINT2NUM(ALLEGRO_FLOAT_DEPTH));
+  rb_define_const(cDisplay , "SINGLE_BUFFER", UINT2NUM(ALLEGRO_SINGLE_BUFFER));
+  rb_define_const(cDisplay , "SWAP_METHOD", UINT2NUM(ALLEGRO_SWAP_METHOD));
+  rb_define_const(cDisplay , "COMPATIBLE_DISPLAY", UINT2NUM(ALLEGRO_COMPATIBLE_DISPLAY));
+  rb_define_const(cDisplay , "UPDATE_DISPLAY_REGION",
+                              UINT2NUM(ALLEGRO_UPDATE_DISPLAY_REGION));
+  rb_define_const(cDisplay , "VSYNC", UINT2NUM(ALLEGRO_VSYNC));
+  rb_define_const(cDisplay , "MAX_BITMAP_SIZE", UINT2NUM(ALLEGRO_MAX_BITMAP_SIZE));
+  rb_define_const(cDisplay , "SUPPORT_NPOT_BITMAP", 
+                              UINT2NUM(ALLEGRO_SUPPORT_NPOT_BITMAP));
+  rb_define_const(cDisplay , "CAN_DRAW_INTO_BITMAP", 
+                            UINT2NUM(ALLEGRO_CAN_DRAW_INTO_BITMAP));
+  rb_define_const(cDisplay , "SUPPORT_SEPATATE_ALPHA",
+                            UINT2NUM(ALLEGRO_SUPPORT_SEPARATE_ALPHA));
+  rb_define_const(cDisplay , "OPTIONS_COUNT", UINT2NUM(ALLEGRO_DISPLAY_OPTIONS_COUNT));
+  rb_define_const(cDisplay , "DONTCARE", UINT2NUM(ALLEGRO_DONTCARE));
+  rb_define_const(cDisplay , "REQUIRE", UINT2NUM(ALLEGRO_REQUIRE));
+  rb_define_const(cDisplay , "SUGGEST", UINT2NUM(ALLEGRO_SUGGEST));
+  
+  rb_define_const(cDisplay , "ORIENTATION_0_DEGREES",
+                              UINT2NUM(ALLEGRO_DISPLAY_ORIENTATION_0_DEGREES));
+  rb_define_const(cDisplay , "ORIENTATION_90_DEGREES",
+                              UINT2NUM(ALLEGRO_DISPLAY_ORIENTATION_90_DEGREES));
+  rb_define_const(cDisplay , "ORIENTATION_180_DEGREES",
+                              UINT2NUM(ALLEGRO_DISPLAY_ORIENTATION_180_DEGREES));
+  rb_define_const(cDisplay , "ORIENTATION_270_DEGREES",
+                              UINT2NUM(ALLEGRO_DISPLAY_ORIENTATION_270_DEGREES));
+                            
+  rb_define_const(cDisplay , "ORIENTATION_FACE_UP",
+                              UINT2NUM(ALLEGRO_DISPLAY_ORIENTATION_FACE_UP));
+  rb_define_const(cDisplay , "ORIENTATION_FACE_DOWN",
+                              UINT2NUM(ALLEGRO_DISPLAY_ORIENTATION_FACE_DOWN));
+   
+  
   rb_define_singleton_method(cDisplay, "create", rbal_create_display, 2);
-  rb_define_method(cDisplay, "destroy", rbal_destroy_display, 0);  
-}
-
+  rb_define_singleton_method(cDisplay, "current", rbal_current_display, 0);
+  rb_define_singleton_method(cDisplay, "rate"  , rbal_new_display_refresh_rate, 0);
+  rb_define_singleton_method(cDisplay, "rate=" , rbal_new_display_refresh_rate_, 1);
+  rb_define_singleton_method(cDisplay, "flags" , rbal_new_display_flags, 0);
+  rb_define_singleton_method(cDisplay, "flags=", rbal_new_display_flags_, 1);
+  rb_define_singleton_method(cDisplay, "option", rbal_new_display_option, 1);
+  rb_define_singleton_method(cDisplay, "option_set", rbal_new_display_option_, 3);
+  rb_define_singleton_method(cDisplay, "option_reset", 
+  rbal_new_display_option_reset, 0);
+  
+  rb_define_singleton_method(cDisplay, "acknowledge_resize"
+                                     , rbal_acknowledge_resize, 0);
+  rb_define_method(cDisplay, "resize", rbal_display_resize, 2);
+  rb_define_singleton_method(cDisplay, "flip", rbal_flip_display, 0);
+  rb_define_singleton_method(cDisplay, "update_region", rbal_update_region, 4);
+  rb_define_singleton_method(cDisplay, "vsync"   , rbal_vsync, 0);
+  rb_define_singleton_method(cDisplay, "position", rbal_new_window_position, 0);
+  rb_define_singleton_method(cDisplay, "position_set", rbal_new_window_position_, 2);
+  
+  rb_define_method(cDisplay, "position"    , rbal_display_position, 0);
+  rb_define_method(cDisplay, "position_set", rbal_display_position_, 2);
+  rb_define_method(cDisplay, "title="      , rbal_display_title_   , 1);
+  
+  rb_define_singleton_method(cDisplay, "defer?", rbal_defer_drawing_p, 0);
+  rb_define_singleton_method(cDisplay, "defer!", rbal_defer_drawing, 1);
+  
+  rb_define_method(cDisplay, "destroy", rbal_destroy_display, 0);
+  rb_define_method(cDisplay, "destroy?", rbal_display_destroyed_p, 0);
+  rb_define_method(cDisplay, "width"   , rbal_display_width, 0);
+  rb_define_method(cDisplay, "height"  , rbal_display_height, 0);
+  rb_define_method(cDisplay, "format"  , rbal_display_format, 0);
+  rb_define_method(cDisplay, "rate"    , rbal_display_refresh_rate, 0);
+  rb_define_method(cDisplay, "flags"   , rbal_display_flags, 0);
+  rb_define_method(cDisplay, "toggle_flag", rbal_display_toggle_flag, 2);
+    
+}  
 
 
 
