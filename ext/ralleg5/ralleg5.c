@@ -98,6 +98,7 @@ void Init_ralleg5() {
   ralleg5_event_init(mAl); 
   ralleg5_display_init(mAl);
   ralleg5_joystick_init(mAl);
+  ralleg5_keyboard_init(mAl);
   
 }
 

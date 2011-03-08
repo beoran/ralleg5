@@ -13,6 +13,7 @@ extern void ralleg5_color_init(VALUE mAl);
 extern void ralleg5_bitmap_init(VALUE mAl);
 extern void ralleg5_event_init(VALUE mAl);
 extern void ralleg5_joystick_init(VALUE mAl);
+extern void ralleg5_keyboard_init(VALUE mAl);
 
 /* Converts a ruby string to utf-8 */
 extern VALUE rb_str_to_utf8(VALUE text);
