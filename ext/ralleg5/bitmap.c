@@ -62,6 +62,14 @@ VALUE rbal_bitmap_wrap(ALLEGRO_BITMAP * ptr) {
 }
 
 
+/* Wraps bitmaps that allegro manages itself and that should have no 
+free function for Ruby. */
+VALUE rbal_bitmap_wrap_nofree(ALLEGRO_BITMAP * ptr) {
+   if(!ptr) return Qnil;
+   return Data_Wrap_Struct(cBitmap, 0, 0, ptr);
+}
+
+
 ALLEGRO_BITMAP * rbal_bitmap_unwrap(VALUE rself) {
   ALLEGRO_BITMAP * result;
   if (rself == Qnil) return NULL;
@@ -233,6 +241,13 @@ VALUE rbal_bitmap_tint_zoom(VALUE rself, VALUE rcolor,
   return Qtrue;
 } 
 
+VALUE rbal_draw_pixel(VALUE rself, VALUE rx, VALUE ry, VALUE rcolor) {
+  ALLEGRO_COLOR  tint = rbal_color_struct(rcolor);
+  al_draw_pixel(RBH_FLOAT(rx), RBH_FLOAT(ry), tint);  
+  return Qtrue;
+}
+
+
 VALUE rbal_put_pixel(VALUE rself, VALUE rx, VALUE ry, VALUE rcolor) {
   ALLEGRO_COLOR  tint = rbal_color_struct(rcolor);
   al_put_pixel(RBH_INT(rx), RBH_INT(ry), tint);  
@@ -247,7 +262,7 @@ VALUE rbal_blend_pixel(VALUE rself, VALUE rx, VALUE ry, VALUE rcolor) {
 
 VALUE rbal_get_pixel(VALUE rself, VALUE rx, VALUE ry) {
   ALLEGRO_BITMAP * self = rbal_bitmap_unwrap(rself);
-  return rbal_color_wrapstruct(al_get_pixel(self, RBH_INT(rx), RBH_INT(ry)));  
+  return rbal_color_wrap_struct(al_get_pixel(self, RBH_INT(rx), RBH_INT(ry)));  
 }
 
 VALUE rbal_get_pixel_size(VALUE rself, VALUE rformat) {
@@ -381,6 +396,32 @@ VALUE rbal_bitmap_compatible_p(VALUE rself) {
 }
 
 
+/* IO */
+
+VALUE rbal_image_init(VALUE rself) { 
+  return RBH_INT_BOOL(al_init_image_addon());
+}
+   
+VALUE rbal_image_shutdown(VALUE rself) {
+  al_shutdown_image_addon(); 
+  return rself;
+}   
+
+VALUE rbal_image_version(VALUE rself) {
+  return RBH_UINT_NUM(al_get_allegro_image_version()); 
+}
+
+VALUE rbal_bitmap_load(VALUE rself, VALUE rfilename) { 
+  const char * filename = RBH_CSTR(rfilename);
+  return rbal_bitmap_wrap(al_load_bitmap(filename));
+}  
+
+VALUE rbal_bitmap_save(VALUE rself, VALUE rfilename) { 
+  const char * filename = RBH_CSTR(rfilename);
+  ALLEGRO_BITMAP * self = rbal_bitmap_unwrap(rself);
+  return RBH_INT_BOOL(al_save_bitmap(filename, self));
+}  
+
 
 void ralleg5_bitmap_init(VALUE mAl) {
   ralleg5_lock_init(mAl);
@@ -511,10 +552,11 @@ void ralleg5_bitmap_init(VALUE mAl) {
   rb_define_method(cBitmap, "tint_zoom"  , rbal_bitmap_tint_zoom   , 9);
   rb_define_method(cBitmap, "tint_scale" , rbal_bitmap_tint_scaled , 10);
   
-  rb_define_singleton_method(cBitmap, "put"  , rbal_put_pixel, 3);
-  rb_define_singleton_method(cBitmap, "blend", rbal_blend_pixel, 3);
-  rb_define_singleton_method(cBitmap, "pixelsize", rbal_get_pixel_size, 1);
-  rb_define_method(cBitmap, "get", rbal_get_pixel, 3);
+  rb_define_singleton_method(cBitmap, "putpixel"  , rbal_put_pixel, 3);
+  rb_define_singleton_method(cBitmap, "drawpixel" , rbal_draw_pixel, 3);
+  rb_define_singleton_method(cBitmap, "blendpixel", rbal_blend_pixel, 3);
+  rb_define_singleton_method(cBitmap, "pixelsize" , rbal_get_pixel_size, 1);
+  rb_define_method(cBitmap, "getpixel", rbal_get_pixel, 2);
   rb_define_method(cBitmap, "mask", rbal_bitmap_mask, 1);
   rb_define_singleton_method(cBitmap, "clip", rbal_bitmap_getclip, 0);
   rb_define_singleton_method(cBitmap, "setclip", rbal_bitmap_setclip, 4);  
@@ -538,6 +580,12 @@ void ralleg5_bitmap_init(VALUE mAl) {
                              rbal_set_separate_blender, 6);
   rb_define_singleton_method(cBitmap, "alphablender"   ,
                              rbal_get_separate_blender, 0);
+                             
+  rb_define_singleton_method(cBitmap, "init"      , rbal_image_init     , 0);
+  rb_define_singleton_method(cBitmap, "shutdown"  , rbal_image_shutdown , 0);
+  rb_define_singleton_method(cBitmap, "version"   , rbal_image_version  , 0);
+  rb_define_singleton_method(cBitmap, "load"      , rbal_bitmap_load    , 1);
+  rb_define_method(cBitmap, "save"                , rbal_bitmap_save    , 1);
     
 }
 

@@ -32,7 +32,7 @@ ALLEGRO_COLOR * rbal_color_unwrap(VALUE rself) {
 }
 
 /* Wraps a color struct by ways of allocating a pointer. */
-VALUE rbal_color_wrapstruct(ALLEGRO_COLOR col) {
+VALUE rbal_color_wrap_struct(ALLEGRO_COLOR col) {
   ALLEGRO_COLOR * result = rbal_color_new(col);
   if(!result) return Qnil;
   return rbal_color_wrap(result); 
@@ -51,12 +51,12 @@ ALLEGRO_COLOR rbal_color_struct(VALUE rself) {
 
 VALUE rbal_color_map_rgb(VALUE rself, VALUE rr, VALUE rg, VALUE rb) {
   return rbal_color_wrap_struct(
-  al_map_rgb(RBH_INT(rr), RBH_INT(rb), RBH_INT(rg)));  
+  al_map_rgb(RBH_INT(rr), RBH_INT(rg), RBH_INT(rb)));  
 }
 
 VALUE rbal_color_map_rgba(VALUE rself, VALUE rr, VALUE rg, VALUE rb, VALUE ra) {
   return rbal_color_wrap_struct(
-  al_map_rgba(RBH_INT(rr), RBH_INT(rb), RBH_INT(rg), RBH_INT(ra)));  
+  al_map_rgba(RBH_INT(rr), RBH_INT(rg), RBH_INT(rb), RBH_INT(ra)));  
 }
 
 VALUE rbal_color_rgba(VALUE rself) {
@@ -64,8 +64,8 @@ VALUE rbal_color_rgba(VALUE rself) {
   ALLEGRO_COLOR * self = rbal_color_unwrap(rself);
   if(!self) return Qnil;
   al_unmap_rgba(*self, &r, &g,&b,  &a);   
-  return rb_ary_new3(4, RBH_INT_NUM(r), RBH_INT_NUM(b), 
-                        RBH_INT_NUM(g), RBH_INT_NUM(a) );
+  return rb_ary_new3(4, RBH_INT_NUM(r), RBH_INT_NUM(g), 
+                        RBH_INT_NUM(b), RBH_INT_NUM(a) );
 }  
 
 VALUE rbal_color_rgb(VALUE rself) {
@@ -73,8 +73,8 @@ VALUE rbal_color_rgb(VALUE rself) {
   ALLEGRO_COLOR * self = rbal_color_unwrap(rself);
   if(!self) return Qnil;
   al_unmap_rgb(*self, &r, &g,&b);   
-  return rb_ary_new3(3, RBH_INT_NUM(r), RBH_INT_NUM(b), 
-                        RBH_INT_NUM(g));
+  return rb_ary_new3(3, RBH_INT_NUM(r), RBH_INT_NUM(g), 
+                        RBH_INT_NUM(b));
 }  
 
 

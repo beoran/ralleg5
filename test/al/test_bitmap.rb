@@ -4,6 +4,8 @@ $: << 'test/al'
 require 'test_al_helper'
 
 assert { Al.init }
+assert { Al::Bitmap.init }
+
 assert { Al::Bitmap }
 assert { Al::Bitmap.flags }
 assert { Al::Bitmap.flags & Al::Bitmap::MEMORY_BITMAP == 0 }
@@ -42,6 +44,24 @@ assert { lo.class == Al::Lock }
 assert { bm.lock? } 
 assert { bm.unlock! } 
 assert { !bm.lock? } 
+
+assert { bm.target! }
+assert { Al::Display.clear_to(Al::Color.rgb(0, 128, 128))       }
+assert { Al::Bitmap.putpixel(10, 20, Al::Color.rgb(128, 0, 0))  }
+assert { bm.getpixel(0, 0).rgb   == [  0, 128, 128]             }
+assert { bm.getpixel(10, 20).rgb == [128,   0,   0]             }
+outname = File.join("test", "output", "test_bitmap.png")
+assert { bm.save(outname)}
+
+bm2 = nil
+assert { bm2 = Al::Bitmap.load(outname) }
+assert { bm2.width  == bm.width }
+assert { bm2.height == bm.height }
+assert { bm2.getpixel(0, 0).rgb   == [  0, 128, 128]             }
+assert { bm2.getpixel(10, 20).rgb == [128,   0,   0]             }
+
+
+
 
 bm = nil
 assert { !GC.start } 

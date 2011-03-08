@@ -13,5 +13,10 @@ unless find_library("allegro", "al_get_allegro_version", "/usr/lib", "/usr/local
 end
 
 
+unless find_library("allegro_image", "al_init_image_addon", "/usr/lib", "/usr/local/lib")
+  raise "Allegro5 image addon library not found!" 
+end
+
+
 create_makefile("ralleg5")
 

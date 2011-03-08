@@ -236,7 +236,7 @@ VALUE rbal_defer_drawing(VALUE rself, VALUE rbool) {
 /* Backbuffer */
 VALUE rbal_display_backbuffer(VALUE rself) {
   ALLEGRO_DISPLAY * self = rbal_display_unwrap(rself);
-  return rbal_bitmap_wrap(al_get_backbuffer(self));
+  return rbal_bitmap_wrap_nofree(al_get_backbuffer(self));
 }
 
 VALUE rbal_display_set_target(VALUE rself) {
