@@ -9,8 +9,9 @@ assert { Al::Display }
 assert { Al::Display.flags }
 assert { Al::Display.rate }
 
-
 disp = nil
+# must do this or otherwise sometimes it will be a fullcreen window...
+assert { Al::Display.flags = Al::Display::WINDOWED } 
 assert { disp = Al::Display.create(640, 480) }
 assert { disp.width                 }
 assert { disp.width == 640          }

@@ -4,12 +4,15 @@
 #include "allegro5/allegro.h"
 #include "rubyhelp.h"
 
+/* Functions that init ruby support for the various parts of allegro.  */
+
 extern void ralleg5_display_init(VALUE mAl);
 extern void ralleg5_mode_init(VALUE mAl);
 extern void ralleg5_monitor_init(VALUE mAl);
 extern void ralleg5_color_init(VALUE mAl);
 extern void ralleg5_bitmap_init(VALUE mAl);
-
+extern void ralleg5_event_init(VALUE mAl);
+extern void ralleg5_joystick_init(VALUE mAl);
 
 /* Converts a ruby string to utf-8 */
 extern VALUE rb_str_to_utf8(VALUE text);
@@ -31,6 +34,19 @@ VALUE rbal_bitmap_wrap_nofree(ALLEGRO_BITMAP * ptr);
 
 /* Unwraps an ALLEGRO_BITMAP from a ruby VALUE */
 extern ALLEGRO_BITMAP * rbal_bitmap_unwrap(VALUE rself);
+
+/* Wraps an allegro display. */
+VALUE rbal_display_wrap(ALLEGRO_DISPLAY * ptr);
+
+/* Wraps an allegro display that Ruby doesn't need to free. */ 
+VALUE rbal_display_wrap_nofree(ALLEGRO_DISPLAY * ptr);
+
+/* Wraps an allegro event source that Ruby doesn't need to free. */
+VALUE rbal_eventsource_wrap_nofree(ALLEGRO_EVENT_SOURCE * ptr);
+
+ /* Unwraps an allegro event source . */
+ALLEGRO_EVENT_SOURCE * rbal_eventsource_unwrap(VALUE rself);
+
 
 
 

@@ -6,6 +6,7 @@ static VALUE cDisplay;
 /* The display itself is wrapped indirectly. */
 struct RBAL_DISPLAY_ {
   ALLEGRO_DISPLAY * ptr;
+  int dofree;
 };
  
 typedef struct RBAL_DISPLAY_ RBAL_DISPLAY;
@@ -25,21 +26,23 @@ int rbal_display_free_p(RBAL_DISPLAY * disp) {
 /* Frees the display wrapper, and the enclosed display if needed. */
 void rbal_display_free(RBAL_DISPLAY * disp) {
   if(rbal_display_free_p(disp)) return;
-  al_destroy_display(disp->ptr);
-  disp->ptr = NULL;
+  if(disp->dofree) al_destroy_display(disp->ptr);
+  disp->ptr = NULL;  
 }
 
 /* Initializes the display wrapper */
-RBAL_DISPLAY * rbal_display_init(RBAL_DISPLAY * disp, ALLEGRO_DISPLAY * ptr) {
+RBAL_DISPLAY * rbal_display_init(RBAL_DISPLAY * disp, 
+ALLEGRO_DISPLAY * ptr, int dofree) {
   if (!disp) return NULL;
   disp->ptr = ptr; 
+  disp->dofree = dofree;
   return disp;
 }
 
-/* Allocates and frees the display wrapper. */
-RBAL_DISPLAY * rbal_display_new(ALLEGRO_DISPLAY * ptr) {
+/* Allocates and wraps the display wrapper. */
+RBAL_DISPLAY * rbal_display_new(ALLEGRO_DISPLAY * ptr, int dosave) {
   RBAL_DISPLAY * disp = rbal_display_alloc();  
-  if(!rbal_display_init(disp, ptr)) {
+  if(!rbal_display_init(disp, ptr, dosave)) {
     rbal_display_free(disp);
     return NULL;
   }
@@ -50,7 +53,15 @@ RBAL_DISPLAY * rbal_display_new(ALLEGRO_DISPLAY * ptr) {
 VALUE rbal_display_wrap(ALLEGRO_DISPLAY * ptr) {
    RBAL_DISPLAY * disp = NULL;
    if(!ptr) return Qnil;
-   disp = rbal_display_new(ptr);
+   disp = rbal_display_new(ptr, 1);
+   if(!disp) return Qnil;
+   return Data_Wrap_Struct(cDisplay, 0, rbal_display_free, disp);
+}
+
+VALUE rbal_display_wrap_nofree(ALLEGRO_DISPLAY * ptr) {
+   RBAL_DISPLAY * disp = NULL;
+   if(!ptr) return Qnil;
+   disp = rbal_display_new(ptr, 0);
    if(!disp) return Qnil;
    return Data_Wrap_Struct(cDisplay, 0, rbal_display_free, disp);
 }
@@ -70,6 +81,8 @@ ALLEGRO_DISPLAY * rbal_display_unwrap(VALUE rdisplay) {
 }  
 
 VALUE rbal_create_display(VALUE rself, VALUE rw, VALUE rh) {
+  /* FIXME: how do we have to manage the memory of displays.
+      Does Allegro manage them or not? */
   return rbal_display_wrap(al_create_display(RBH_INT(rw), RBH_INT(rh)));
 }
 
@@ -270,6 +283,13 @@ VALUE rbal_display_icon_(VALUE rself, VALUE rbmp) {
   return rself;
 }
 
+VALUE rbal_display_eventsource(VALUE rself) { 
+  ALLEGRO_DISPLAY     * self = rbal_display_unwrap(rself);
+  ALLEGRO_EVENT_SOURCE * src = NULL;
+  src = al_get_display_event_source(self);
+  return rbal_eventsource_wrap_nofree(src);
+}  
+ 
 
 #ifdef _THIS_IS_COMMENT_
 /* Still need to implement following when ALLEGRO_COLOR and ALLEGRO_BITMAP 
@@ -394,7 +414,8 @@ void ralleg5_display_init(VALUE mAl) {
   rb_define_method(cDisplay, "toggle_flag", rbal_display_toggle_flag, 2);
   rb_define_method(cDisplay, "backbuffer" , rbal_display_backbuffer , 0);
   rb_define_method(cDisplay, "target!"    , rbal_display_set_target , 0);
-  
+  rb_define_method(cDisplay, "eventsource", rbal_display_eventsource , 0);
+
 }
 
 
