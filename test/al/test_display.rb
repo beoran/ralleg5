@@ -72,6 +72,8 @@ assert { disp.width == 10 }
 assert { disp.resize(640, 480) }
 disp.title="ralleg5"
 
+sleep 0.5
+
 curr = nil 
 assert { curr = Al::Display.current }
 assert { disp.width   == curr.width }
@@ -101,5 +103,6 @@ assert { Al::Display.option(Al::Display::SINGLE_BUFFER) == 1 }
 
 assert { disp.destroy   }
 assert { disp.destroy?  }
+p disp.destroy?
 assert { GC.start || true } 
 

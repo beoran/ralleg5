@@ -41,6 +41,24 @@ VALUE rbal_xxx_done(VALUE rself) {
   return rself;
 }
 
+// Wraps a into a Ruby object, optionally garbage collected. 
+VALUE rbal__wrap(ALLEGRO_ * ptr, int gc) {
+  if(!ptr) return Qnil;
+  if (gc == RBAL_GC) {
+    return Data_Wrap_Struct(c, 0, , ptr);
+  } else {
+    return Data_Wrap_Struct(c, 0, 0, ptr);
+  } 
+}
+
+// Unwraps a from a Ruby object 
+ALLEGRO_   * rbal__unwrap(VALUE rself) { 
+  ALLEGRO_ * result;
+  if (rself == Qnil) return NULL;
+  Data_Get_Struct(rself, ALLEGRO_, result);
+  return result;
+}
+
 
 
 

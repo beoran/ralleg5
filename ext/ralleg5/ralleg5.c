@@ -89,26 +89,19 @@ void ralleg5_system_init(VALUE mAl, VALUE mLow) {
   rb_define_const(mAl, "EXENAME_PATH"       , UINT2NUM(ALLEGRO_EXENAME_PATH));
   
   /* Low level interface below: */
-  rb_define_singleton_method(mLow, "al_get_allegro_version"   ,
-                                   rbal_get_allegro_version  , 0);
-  rb_define_singleton_method(mLow, "al_init"  , rbal_init     , 0);
-  rb_define_singleton_method(mLow, "al_install_system"   
-                                 , rbal_install_system       , 0);
-  rb_define_singleton_method(mAl , "al_uninstall_system" 
-                                 , rbal_uninstall_system     , 0);
-  rb_define_singleton_method(mAl, "al_is_system_installed"  
-                                , rbal_is_system_installed  , 0);
-  rb_define_singleton_method(mAl, "al_inhibit_screensaver",
-                                   rbal_inhibit_screensaver, 1);
-
+  rbal_low_func(mLow, al_get_allegro_version, 0);
+  rbal_low_func(mLow, al_init               , 0);
+  rbal_low_func(mLow, al_install_system     , 0);
+  rbal_low_func(mLow, al_uninstall_system   , 0);
+  rbal_low_func(mLow, al_is_system_installed, 0);
+  rbal_low_func(mLow, al_inhibit_screensaver, 0);
   rbal_low_const(mLow, ALLEGRO_RESOURCES_PATH);
   rbal_low_const(mLow, ALLEGRO_TEMP_PATH);
   rbal_low_const(mLow, ALLEGRO_USER_DATA_PATH);
   rbal_low_const(mLow, ALLEGRO_USER_HOME_PATH);
   rbal_low_const(mLow, ALLEGRO_USER_SETTINGS_PATH);
   rbal_low_const(mLow, ALLEGRO_USER_DOCUMENTS_PATH);
-  rbal_low_const(mLow, ALLEGRO_EXENAME_PATH);
-  
+  rbal_low_const(mLow, ALLEGRO_EXENAME_PATH);  
 }
 
 
@@ -126,6 +119,7 @@ void Init_ralleg5() {
   ralleg5_joystick_init(mAl);
   ralleg5_keyboard_init(mAl);
   ralleg5_draw_init(mAl);
+  ralleg5_audio_init(mAl, mLow);
   
 }
 

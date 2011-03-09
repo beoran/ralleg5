@@ -4,15 +4,22 @@
 #include "allegro5/allegro.h"
 #include "rubyhelp.h"
 
-/* Helper macros to import constants in the low level API */
+/* Helper macros for the low level API */
 #define rbal_low_const_uint(KLASS, CONST) \
-        rb_define_const(KLASS, ##CONST, UINT2NUM(CONST))
+        rb_define_const(KLASS, #CONST, UINT2NUM(CONST))
 
 #define rbal_low_const_int(KLASS, CONST) \
-        rb_define_const(KLASS, ##CONST, INT2NUM(CONST))
+        rb_define_const(KLASS, #CONST, INT2NUM(CONST))
+
+#define rbal_low_const_float(KLASS, CONST) \
+        rb_define_const(KLASS, #CONST, RBH_FLOAT_NUM(CONST))
         
-#define rbal_low__const(KLASS, CONST) rbal_const_uint(KLASS, CONST)
-         
+        
+#define rbal_low_const(KLASS, CONST) rbal_low_const_uint(KLASS, CONST)
+
+# define rbal_low_func(KLASS, NAME, ARGC) \
+         rb_define_method(KLASS, #NAME, rb##NAME, ARGC) 
+
 
 /* Functions that init ruby support for the various parts of allegro.  */
 
@@ -25,6 +32,11 @@ extern void ralleg5_event_init(VALUE mAl);
 extern void ralleg5_joystick_init(VALUE mAl);
 extern void ralleg5_keyboard_init(VALUE mAl);
 extern void ralleg5_draw_init(VALUE mAl);
+extern void ralleg5_audio_init(VALUE mAl, VALUE mLow);
+
+/* For the rbal_xxx_wrap functions */
+#define RBAL_NO_GC (0)
+#define RBAL_GC    (!RBAL_NO_GC)
 
 /* Converts a ruby string to utf-8 */
 extern VALUE rb_str_to_utf8(VALUE text);
@@ -60,7 +72,8 @@ VALUE rbal_eventsource_wrap_nofree(ALLEGRO_EVENT_SOURCE * ptr);
 ALLEGRO_EVENT_SOURCE * rbal_eventsource_unwrap(VALUE rself);
 
 
-
+/* Unwraps an allegro file */
+ALLEGRO_FILE * rbal_file_unwrap(VALUE rfp);
 
 
 #endif
