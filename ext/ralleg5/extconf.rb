@@ -37,6 +37,11 @@ unless find_library("allegro_ttf", "al_init_ttf_addon", "/usr/lib", "/usr/local/
   raise "Allegro5 ttf addon library not found!" 
 end
 
+unless find_library("allegro_dialog", "al_get_allegro_native_dialog_version",
+		    "/usr/lib", "/usr/local/lib")
+  raise "Allegro5 ttf addon library not found!" 
+end
+
 
 =begin
 Allegro consists of the following libraries: 
