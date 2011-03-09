@@ -33,6 +33,7 @@ extern void ralleg5_joystick_init(VALUE mAl);
 extern void ralleg5_keyboard_init(VALUE mAl);
 extern void ralleg5_draw_init(VALUE mAl);
 extern void ralleg5_audio_init(VALUE mAl, VALUE mLow);
+extern void ralleg5_ustr_init(VALUE mAl, VALUE mLow);
 
 /* For the rbal_xxx_wrap functions */
 #define RBAL_NO_GC (0)

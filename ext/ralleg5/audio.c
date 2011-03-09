@@ -759,8 +759,31 @@ VALUE rbal_load_audio_stream_f(VALUE r_, VALUE rfp, VALUE rident,
 }
 
 
+/* Highlevel API: */
+VALUE rbal_mixer_new(VALUE r_, VALUE rfreq, VALUE rdepth, VALUE rchan) {
+  ALLEGRO_MIXER * mix = NULL;
+  mix = al_create_mixer(RBH_UINT(rfreq), RBH_UINT(rdepth), RBH_UINT(rchan));
+  return rbal_mixer_wrap(mix, RBAL_GC);  
+}
+
+
+VALUE rbal_sample_load(VALUE r_, VALUE rfilename) {
+  const char *filename    = RBH_CSTR(rfilename);  
+  return rbal_sample_wrap(al_load_sample(filename), RBAL_GC); 
+}
+
+VALUE rbal_audiostream_load(VALUE r_, VALUE rfilename, VALUE rbu, VALUE rsa) {
+  const char *filename       = RBH_CSTR(rfilename);
+  ALLEGRO_AUDIO_STREAM * str = NULL;
+  str = al_load_audio_stream(filename, RBH_UINT(rbu), RBH_INT(rsa));
+  return rbal_audiostream_wrap(str, RBAL_GC); 
+}
+
+
+
+
 /* Useful ruby snippet after running CPP on the allegro header file: 
-parts.map { |e| p e; cnt = e.count(',') - 2 ;  i = e.index(",", e.index(",") + 1) ; e[0..i] + " #{cnt})"  }
+parts.map { |e| p e; cnt = e.count(',') - 1 ;  i = e.index(",", e.index(",") + 1) ; cnt-=1 if e =~ /((void))/ ; e[0..i] + " #{cnt})"  }
 */  
 
 void ralleg5_audio_init(VALUE mAl, VALUE mLow) {
@@ -771,6 +794,13 @@ void ralleg5_audio_init(VALUE mAl, VALUE mLow) {
   cAudioStream    = rb_define_class_under(mAl , "AudioStream"    , rb_cObject);
   cMixer          = rb_define_class_under(mAl , "Mixer"          , rb_cObject);
   cVoice          = rb_define_class_under(mAl , "Voice"          , rb_cObject);
+  
+  /* High level API, to be enhanced using Ruby libs. */
+  rb_define_singleton_method(cSample     , "load" , rbal_sample_load       , 1);
+  rb_define_singleton_method(cAudioStream, "load" , rbal_audiostream_load  , 1);
+  rb_define_singleton_method(cMixer      , "new"  , rbal_mixer_new         , 3);
+  
+  /* Low level API */
   
   rbal_low_const(mLow, ALLEGRO_AUDIO_DEPTH_INT8);
   rbal_low_const(mLow, ALLEGRO_AUDIO_DEPTH_INT16);
@@ -799,125 +829,129 @@ void ralleg5_audio_init(VALUE mAl, VALUE mLow) {
   /* Low level API: */
   rbal_low_func(mLow, al_init_acodec_addon            , 0);
   rbal_low_func(mLow, al_get_allegro_acodec_version   , 0);
-  /** Automatically generated. */
+  /* NOTE: Automatically generated, may still have some erors in param count. */
   rbal_low_func(mLow, al_create_sample, 5);
-  rbal_low_func(mLow, al_destroy_sample, 0);
-  rbal_low_func(mLow, al_create_sample_instance, 0);
-  rbal_low_func(mLow, al_destroy_sample_instance, 0);
-  rbal_low_func(mLow, al_get_sample_frequency, 0);
-  rbal_low_func(mLow, al_get_sample_length, 0);
-  rbal_low_func(mLow, al_get_sample_depth, 0);
-  rbal_low_func(mLow, al_get_sample_channels, 0);
-  rbal_low_func(mLow, al_get_sample_data, 0);
-  rbal_low_func(mLow, al_get_sample_instance_frequency, 0);
-  rbal_low_func(mLow, al_get_sample_instance_length, 0);
-  rbal_low_func(mLow, al_get_sample_instance_position, 0);
-  rbal_low_func(mLow, al_get_sample_instance_speed, 0);
-  rbal_low_func(mLow, al_get_sample_instance_gain, 0);
-  rbal_low_func(mLow, al_get_sample_instance_pan, 0);
-  rbal_low_func(mLow, al_get_sample_instance_time, 0);
-  rbal_low_func(mLow, al_get_sample_instance_depth, 0);
-  rbal_low_func(mLow, al_get_sample_instance_channels, 0);
-  rbal_low_func(mLow, al_get_sample_instance_playmode, 0);
-  rbal_low_func(mLow, al_get_sample_instance_playing, 0);
-  rbal_low_func(mLow, al_get_sample_instance_attached, 0);
-  rbal_low_func(mLow, al_set_sample_instance_position, 1);
-  rbal_low_func(mLow, al_set_sample_instance_length, 1);
-  rbal_low_func(mLow, al_set_sample_instance_speed, 1);
-  rbal_low_func(mLow, al_set_sample_instance_gain, 1);
-  rbal_low_func(mLow, al_set_sample_instance_pan, 1);
-  rbal_low_func(mLow, al_set_sample_instance_playmode, 1);
-  rbal_low_func(mLow, al_set_sample_instance_playing, 1);
-  rbal_low_func(mLow, al_detach_sample_instance, 0);
-  rbal_low_func(mLow, al_set_sample, 1);
-  rbal_low_func(mLow, al_get_sample, 0);
-  rbal_low_func(mLow, al_play_sample_instance, 0);
-  rbal_low_func(mLow, al_stop_sample_instance, 0);
-  rbal_low_func(mLow, al_create_audio_stream, 4);
-  rbal_low_func(mLow, al_destroy_audio_stream, 0);
-  rbal_low_func(mLow, al_drain_audio_stream, 0);
-  rbal_low_func(mLow, al_get_audio_stream_frequency, 0);
-  rbal_low_func(mLow, al_get_audio_stream_length, 0);
-  rbal_low_func(mLow, al_get_audio_stream_fragments, 0);
-  rbal_low_func(mLow, al_get_available_audio_stream_fragments, 0);
-  rbal_low_func(mLow, al_get_audio_stream_speed, 0);
-  rbal_low_func(mLow, al_get_audio_stream_gain, 0);
-  rbal_low_func(mLow, al_get_audio_stream_pan, 0);
-  rbal_low_func(mLow, al_get_audio_stream_channels, 0);
-  rbal_low_func(mLow, al_get_audio_stream_depth, 0);
-  rbal_low_func(mLow, al_get_audio_stream_playmode, 0);
-  rbal_low_func(mLow, al_get_audio_stream_playing, 0);
-  rbal_low_func(mLow, al_get_audio_stream_attached, 0);
-  rbal_low_func(mLow, al_get_audio_stream_fragment, 0);
-  rbal_low_func(mLow, al_set_audio_stream_speed, 1);
-  rbal_low_func(mLow, al_set_audio_stream_gain, 1);
-  rbal_low_func(mLow, al_set_audio_stream_pan, 1);
-  rbal_low_func(mLow, al_set_audio_stream_playmode, 1);
-  rbal_low_func(mLow, al_set_audio_stream_playing, 1);
-  rbal_low_func(mLow, al_detach_audio_stream, 0);
+  rbal_low_func(mLow, al_destroy_sample, 1);
+  rbal_low_func(mLow, al_create_sample_instance, 1);
+  rbal_low_func(mLow, al_destroy_sample_instance, 1);
+  rbal_low_func(mLow, al_get_sample_frequency, 1);
+  rbal_low_func(mLow, al_get_sample_length, 1);
+  rbal_low_func(mLow, al_get_sample_depth, 1);
+  rbal_low_func(mLow, al_get_sample_channels, 1);
+  rbal_low_func(mLow, al_get_sample_data, 1);
+  rbal_low_func(mLow, al_get_sample_instance_frequency, 1);
+  rbal_low_func(mLow, al_get_sample_instance_length, 1);
+  rbal_low_func(mLow, al_get_sample_instance_position, 1);
+  rbal_low_func(mLow, al_get_sample_instance_speed, 1);
+  rbal_low_func(mLow, al_get_sample_instance_gain, 1);
+  rbal_low_func(mLow, al_get_sample_instance_pan, 1);
+  rbal_low_func(mLow, al_get_sample_instance_time, 1);
+  rbal_low_func(mLow, al_get_sample_instance_depth, 1);
+  rbal_low_func(mLow, al_get_sample_instance_channels, 1);
+  rbal_low_func(mLow, al_get_sample_instance_playmode, 1);
+  rbal_low_func(mLow, al_get_sample_instance_playing, 1);
+  rbal_low_func(mLow, al_get_sample_instance_attached, 1);
+  rbal_low_func(mLow, al_set_sample_instance_position, 2);
+  rbal_low_func(mLow, al_set_sample_instance_length, 2);
+  rbal_low_func(mLow, al_set_sample_instance_speed, 2);
+  rbal_low_func(mLow, al_set_sample_instance_gain, 2);
+  rbal_low_func(mLow, al_set_sample_instance_pan, 2);
+  rbal_low_func(mLow, al_set_sample_instance_playmode, 2);
+  rbal_low_func(mLow, al_set_sample_instance_playing, 2);
+  rbal_low_func(mLow, al_detach_sample_instance, 1);
+  rbal_low_func(mLow, al_set_sample, 2);
+  rbal_low_func(mLow, al_get_sample, 1);
+  rbal_low_func(mLow, al_play_sample_instance, 1);
+  rbal_low_func(mLow, al_stop_sample_instance, 1);
+  rbal_low_func(mLow, al_create_audio_stream, 5);
+  rbal_low_func(mLow, al_destroy_audio_stream, 1);
+  rbal_low_func(mLow, al_drain_audio_stream, 1);
+  rbal_low_func(mLow, al_get_audio_stream_frequency, 1);
+  rbal_low_func(mLow, al_get_audio_stream_length, 1);
+  rbal_low_func(mLow, al_get_audio_stream_fragments, 1);
+  rbal_low_func(mLow, al_get_available_audio_stream_fragments, 1);
+  rbal_low_func(mLow, al_get_audio_stream_speed, 1);
+  rbal_low_func(mLow, al_get_audio_stream_gain, 1);
+  rbal_low_func(mLow, al_get_audio_stream_pan, 1);
+  rbal_low_func(mLow, al_get_audio_stream_channels, 1);
+  rbal_low_func(mLow, al_get_audio_stream_depth, 1);
+  rbal_low_func(mLow, al_get_audio_stream_playmode, 1);
+  rbal_low_func(mLow, al_get_audio_stream_playing, 1);
+  rbal_low_func(mLow, al_get_audio_stream_attached, 1);
+  rbal_low_func(mLow, al_get_audio_stream_fragment, 1);
+  rbal_low_func(mLow, al_set_audio_stream_speed, 2);
+  rbal_low_func(mLow, al_set_audio_stream_gain, 2);
+  rbal_low_func(mLow, al_set_audio_stream_pan, 2);
+  rbal_low_func(mLow, al_set_audio_stream_playmode, 2);
+  rbal_low_func(mLow, al_set_audio_stream_playing, 2);
+  rbal_low_func(mLow, al_detach_audio_stream, 1);
   rbal_low_func(mLow, al_set_audio_stream_fragment, 1);
-  rbal_low_func(mLow, al_rewind_audio_stream, 0);
-  rbal_low_func(mLow, al_seek_audio_stream_secs, 1);
-  rbal_low_func(mLow, al_get_audio_stream_position_secs, 0);
-  rbal_low_func(mLow, al_get_audio_stream_length_secs, 0);
-  rbal_low_func(mLow, al_set_audio_stream_loop_secs, 2);
-  rbal_low_func(mLow, al_get_audio_stream_event_source, 0);
-  rbal_low_func(mLow, al_create_mixer, 2);
-  rbal_low_func(mLow, al_destroy_mixer, 0);
-  rbal_low_func(mLow, al_attach_sample_instance_to_mixer, 1);
-  rbal_low_func(mLow, al_attach_audio_stream_to_mixer, 1);
-  rbal_low_func(mLow, al_attach_mixer_to_mixer, 1);
+  rbal_low_func(mLow, al_rewind_audio_stream, 1);
+  rbal_low_func(mLow, al_seek_audio_stream_secs, 2);
+  rbal_low_func(mLow, al_get_audio_stream_position_secs, 1);
+  rbal_low_func(mLow, al_get_audio_stream_length_secs, 1);
+  rbal_low_func(mLow, al_set_audio_stream_loop_secs, 3);
+  rbal_low_func(mLow, al_get_audio_stream_event_source, 1);
+  rbal_low_func(mLow, al_create_mixer, 3);
+  rbal_low_func(mLow, al_destroy_mixer, 1);
+  rbal_low_func(mLow, al_attach_sample_instance_to_mixer, 2);
+  rbal_low_func(mLow, al_attach_audio_stream_to_mixer, 2);
+  rbal_low_func(mLow, al_attach_mixer_to_mixer, 2);
   rbal_low_func(mLow, al_set_mixer_postprocess_callback, 4);
-  rbal_low_func(mLow, al_get_mixer_frequency, 0);
-  rbal_low_func(mLow, al_get_mixer_channels, 0);
-  rbal_low_func(mLow, al_get_mixer_depth, 0);
-  rbal_low_func(mLow, al_get_mixer_quality, 0);
-  rbal_low_func(mLow, al_get_mixer_playing, 0);
-  rbal_low_func(mLow, al_get_mixer_attached, 0);
-  rbal_low_func(mLow, al_set_mixer_frequency, 1);
-  rbal_low_func(mLow, al_set_mixer_quality, 1);
-  rbal_low_func(mLow, al_set_mixer_playing, 1);
-  rbal_low_func(mLow, al_detach_mixer, 0);
-  rbal_low_func(mLow, al_create_voice, 2);
-  rbal_low_func(mLow, al_destroy_voice, 0);
-  rbal_low_func(mLow, al_attach_sample_instance_to_voice, 1);
-  rbal_low_func(mLow, al_attach_audio_stream_to_voice, 1);
-  rbal_low_func(mLow, al_attach_mixer_to_voice, 1);
-  rbal_low_func(mLow, al_detach_voice, 0);
-  rbal_low_func(mLow, al_get_voice_frequency, 0);
-  rbal_low_func(mLow, al_get_voice_position, 0);
-  rbal_low_func(mLow, al_get_voice_channels, 0);
-  rbal_low_func(mLow, al_get_voice_depth, 0);
-  rbal_low_func(mLow, al_get_voice_playing, 0);
-  rbal_low_func(mLow, al_set_voice_position, 1);
-  rbal_low_func(mLow, al_set_voice_playing, 1);
+  rbal_low_func(mLow, al_get_mixer_frequency, 1);
+  rbal_low_func(mLow, al_get_mixer_channels, 1);
+  rbal_low_func(mLow, al_get_mixer_depth, 1);
+  rbal_low_func(mLow, al_get_mixer_quality, 1);
+  rbal_low_func(mLow, al_get_mixer_playing, 1);
+  rbal_low_func(mLow, al_get_mixer_attached, 1);
+  rbal_low_func(mLow, al_set_mixer_frequency, 2);
+  rbal_low_func(mLow, al_set_mixer_quality, 2);
+  rbal_low_func(mLow, al_set_mixer_playing, 2);
+  rbal_low_func(mLow, al_detach_mixer, 1);
+  rbal_low_func(mLow, al_create_voice, 3);
+  rbal_low_func(mLow, al_destroy_voice, 1);
+  rbal_low_func(mLow, al_attach_sample_instance_to_voice, 2);
+  rbal_low_func(mLow, al_attach_audio_stream_to_voice, 2);
+  rbal_low_func(mLow, al_attach_mixer_to_voice, 2);
+  rbal_low_func(mLow, al_detach_voice, 1);
+  rbal_low_func(mLow, al_get_voice_frequency, 1);
+  rbal_low_func(mLow, al_get_voice_position, 1);
+  rbal_low_func(mLow, al_get_voice_channels, 1);
+  rbal_low_func(mLow, al_get_voice_depth, 1);
+  rbal_low_func(mLow, al_get_voice_playing, 1);
+  rbal_low_func(mLow, al_set_voice_position, 2);
+  rbal_low_func(mLow, al_set_voice_playing, 2);
   rbal_low_func(mLow, al_install_audio, 0);
   rbal_low_func(mLow, al_uninstall_audio, 0);
   rbal_low_func(mLow, al_is_audio_installed, 0);
   rbal_low_func(mLow, al_get_allegro_audio_version, 0);
-  rbal_low_func(mLow, al_get_channel_count, 0);
-  rbal_low_func(mLow, al_get_audio_depth_size, 0);
-  rbal_low_func(mLow, al_reserve_samples, 0);
+  rbal_low_func(mLow, al_get_channel_count, 1);
+  rbal_low_func(mLow, al_get_audio_depth_size, 1);
+  rbal_low_func(mLow, al_reserve_samples, 1);
   rbal_low_func(mLow, al_get_default_mixer, 0);
-  rbal_low_func(mLow, al_set_default_mixer, 0);
+  rbal_low_func(mLow, al_set_default_mixer, 1);
   rbal_low_func(mLow, al_restore_default_mixer, 0);
-  rbal_low_func(mLow, al_play_sample, 5);
-  rbal_low_func(mLow, al_stop_sample, 0);
+  rbal_low_func(mLow, al_play_sample, 6);
+  rbal_low_func(mLow, al_stop_sample, 1);
   rbal_low_func(mLow, al_stop_samples, 0);
-/* These are not supported  
-  rbal_low_func(mLow, al_register_sample_loader, 1);
-  rbal_low_func(mLow, al_register_sample_saver, 2);
-  rbal_low_func(mLow, al_register_audio_stream_loader, 3);
-  rbal_low_func(mLow, al_register_sample_loader_f, 1);
-  rbal_low_func(mLow, al_register_sample_saver_f, 2);
-  rbal_low_func(mLow, al_register_audio_stream_loader_f, 3);
-*/  
-  rbal_low_func(mLow, al_load_sample, 0);
-  rbal_low_func(mLow, al_save_sample, 1);
-  rbal_low_func(mLow, al_load_audio_stream, 2);
-  rbal_low_func(mLow, al_load_sample_f, 1);
-  rbal_low_func(mLow, al_save_sample_f, 2);
-  rbal_low_func(mLow, al_load_audio_stream_f, 3);
+  /* These are not supported
+  rbal_low_func(mLow, al_register_sample_loader, 2);
+  rbal_low_func(mLow, al_register_sample_saver, 3);
+  rbal_low_func(mLow, al_register_audio_stream_loader, 4);
+  rbal_low_func(mLow, al_register_sample_loader_f, 2);
+  rbal_low_func(mLow, al_register_sample_saver_f, 3);
+  rbal_low_func(mLow, al_register_audio_stream_loader_f, 4);
+  */
+  rbal_low_func(mLow, al_load_sample, 1);
+  rbal_low_func(mLow, al_save_sample, 2);
+  rbal_low_func(mLow, al_load_audio_stream, 3);
+  rbal_low_func(mLow, al_load_sample_f, 2);
+  rbal_low_func(mLow, al_save_sample_f, 3);
+  rbal_low_func(mLow, al_load_audio_stream_f, 4);
+  
+  /* Needed because Allegro doesn't provvide them. */
+  rbal_low_func(mLow, al_create_sample_id, 0);
+  rbal_low_func(mLow, al_destroy_sample_id, 0);
 
 }
 

@@ -190,6 +190,9 @@ static RBH_GETSTRUCT_DEFINE(struct_name, fun, klass, klassstr)
 // Converts a ruby value to a C string
 #define RBH_CSTR(VALUE) ((RSTRING_PTR(VALUE)))
 
+// Returns the length of the string. 
+#define RBH_CSTRLEN(VALUE) ((RSTRING_LEN(VALUE)))
+
 
 // Converts an integer to a Ruby number value 
 #define RBH_INT_NUM(INT) INT2NUM(INT)

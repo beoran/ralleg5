@@ -120,6 +120,7 @@ void Init_ralleg5() {
   ralleg5_keyboard_init(mAl);
   ralleg5_draw_init(mAl);
   ralleg5_audio_init(mAl, mLow);
+  ralleg5_ustr_init(mAl, mLow);
   
 }
 
