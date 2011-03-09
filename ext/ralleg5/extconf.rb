@@ -21,6 +21,7 @@ unless find_library("allegro_primitives", "al_init_primitives_addon", "/usr/lib"
   raise "Allegro5 image addon library not found!" 
 end
 
-
-create_makefile("ralleg5")
+unless find_library("allegro_audio", "al_install_audio", "/usr/lib", "/usr/local/lib")
+  raise "Allegro5 audio addon library not found!" 
+end
 

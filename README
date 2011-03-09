@@ -10,7 +10,7 @@ I won't use FFI since speed is of essence for game libraries.
 
 Prerequisites: 
 --------------
-Ruby: MRI. Others untested. 
+Ruby: MRI 1.9.x. Others untested. 
 For compiling: allegro-5.0.0, and it's dependencies.
 For testing: watchr, autowatchr. Nanotest has been vendored.
 For documentation generation: YARD.
