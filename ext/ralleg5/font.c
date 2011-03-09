@@ -70,7 +70,7 @@ ALLEGRO_   * rbal__unwrap(VALUE rself) {
 
 VALUE cFont;
 
-// Wraps a into a Ruby object, optionally garbage collected. 
+// Wraps a font into a Ruby object, optionally garbage collected. 
 VALUE rbal_font_wrap(ALLEGRO_FONT * ptr, int gc) {
   if(!ptr) return Qnil;
   if (gc == RBAL_GC) {
@@ -80,7 +80,7 @@ VALUE rbal_font_wrap(ALLEGRO_FONT * ptr, int gc) {
   } 
 }
 
-// Unwraps a from a Ruby object 
+// Unwraps a font from a Ruby object 
 ALLEGRO_FONT  * rbal_font_unwrap(VALUE rself) { 
   ALLEGRO_FONT * result;
   if (rself == Qnil) return NULL;
