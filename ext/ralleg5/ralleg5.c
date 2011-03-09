@@ -1,9 +1,11 @@
 
 #include "ralleg5.h"
 
-
+/* Allegro namespace module. */
 static VALUE mAl;
 
+/* Low level wrapper module. */
+static VALUE mLow;
 
 /*Utility functions */
 
@@ -68,13 +70,14 @@ AL_FUNC(const char *, al_get_app_name, (void));
 AL_FUNC(bool, al_inhibit_screensaver, (bool inhibit));
 */
 
-void ralleg5_system_init(VALUE mAl) {
+void ralleg5_system_init(VALUE mAl, VALUE mLow) {
   rb_define_singleton_method(mAl, "version"   , rbal_get_allegro_version  , 0);
   rb_define_singleton_method(mAl, "init"      , rbal_init		  , 0);
   rb_define_singleton_method(mAl, "install"   , rbal_install_system       , 0);
   rb_define_singleton_method(mAl, "uninstall" , rbal_uninstall_system     , 0);
   rb_define_singleton_method(mAl, "install?"  , rbal_is_system_installed  , 0);
   rb_define_singleton_method(mAl, "no_screensaver", rbal_inhibit_screensaver, 1);
+
 
   
   rb_define_const(mAl, "RESOURCES_PATH"     , UINT2NUM(ALLEGRO_RESOURCES_PATH));
@@ -84,22 +87,41 @@ void ralleg5_system_init(VALUE mAl) {
   rb_define_const(mAl, "USER_SETTINGS_PATH" , UINT2NUM(ALLEGRO_USER_SETTINGS_PATH));
   rb_define_const(mAl, "USER_DOCUMENTS_PATH", UINT2NUM(ALLEGRO_USER_DOCUMENTS_PATH));
   rb_define_const(mAl, "EXENAME_PATH"       , UINT2NUM(ALLEGRO_EXENAME_PATH));
+  
+  /* Low level interface below: */
+  rbal_low_func(mLow, al_get_allegro_version, 0);
+  rbal_low_func(mLow, al_init               , 0);
+  rbal_low_func(mLow, al_install_system     , 0);
+  rbal_low_func(mLow, al_uninstall_system   , 0);
+  rbal_low_func(mLow, al_is_system_installed, 0);
+  rbal_low_func(mLow, al_inhibit_screensaver, 0);
+  rbal_low_const(mLow, ALLEGRO_RESOURCES_PATH);
+  rbal_low_const(mLow, ALLEGRO_TEMP_PATH);
+  rbal_low_const(mLow, ALLEGRO_USER_DATA_PATH);
+  rbal_low_const(mLow, ALLEGRO_USER_HOME_PATH);
+  rbal_low_const(mLow, ALLEGRO_USER_SETTINGS_PATH);
+  rbal_low_const(mLow, ALLEGRO_USER_DOCUMENTS_PATH);
+  rbal_low_const(mLow, ALLEGRO_EXENAME_PATH);  
 }
 
 
 /** Entry point for Ruby. */
 void Init_ralleg5() {
-  mAl = rb_define_module("Al"); 
-  ralleg5_system_init(mAl); 
+  mAl   = rb_define_module("Al"); 
+  mLow  = rb_define_module_under(mAl, "Low");
+  ralleg5_system_init(mAl, mLow); 
   ralleg5_mode_init(mAl);  
   ralleg5_monitor_init(mAl);
   ralleg5_color_init(mAl);
   ralleg5_bitmap_init(mAl);
-  ralleg5_event_init(mAl); 
+  ralleg5_event_init(mAl);
   ralleg5_display_init(mAl);
   ralleg5_joystick_init(mAl);
   ralleg5_keyboard_init(mAl);
   ralleg5_draw_init(mAl);
+  ralleg5_audio_init(mAl, mLow);
+  ralleg5_ustr_init(mAl, mLow);
+  ralleg5_font_init(mAl, mLow);
   
 }
 

@@ -83,11 +83,11 @@ ALLEGRO_DISPLAY * rbal_display_unwrap(VALUE rdisplay) {
 VALUE rbal_create_display(VALUE rself, VALUE rw, VALUE rh) {
   /* FIXME: how do we have to manage the memory of displays.
       Does Allegro manage them or not? */
-  return rbal_display_wrap(al_create_display(RBH_INT(rw), RBH_INT(rh)));
+  return rbal_display_wrap_nofree(al_create_display(RBH_INT(rw), RBH_INT(rh)));
 }
 
 VALUE rbal_current_display(VALUE rself) {
-  return rbal_display_wrap(al_get_current_display());
+  return rbal_display_wrap_nofree(al_get_current_display());
 }
 
 VALUE rbal_destroy_display(VALUE rself) {   
