@@ -49,27 +49,41 @@ as those in the C api. For example:
  ...
 
 The function signature is mostly the same as in c, as are the results, but there
-are some exceptions involving pointers. In case primitives are passed by 
-reference, the function does not take those by reference, but returns an array of them in stead, in the same order of the C function call. 
+are some exceptions involving pointers. In case primitives are returned by 
+reference, the function does not take those by reference, but returns an array 
+of them in stead, in the same order of the C function call. In case these 
+primitives are also passed in, the parameter list remainst he same, but the 
+result is still returned as an array.
   
 So for example in C, al_get_text_dimensions has the parameter list 
 (const ALLEGRO_FONT *f, char const *text, int *bbx, int *bby, int *bbw, int *bbh)
 This becomes al_get_text_dimensions(f, text) in Ruby, but it returns an array 
-like this: [bbx, bby, bbw, bbh].  
+like this: [bbx, bby, bbw, bbh]. But al_transform_coordinates with parameters 
+(const ALLEGRO_TRANSFORM* trans, float* x, float* y) becomes 
+al_transform_coordinates(trans, x, y) and returns an array [x, y].
 
-Since in Ruby, there are no void functions, and to enable method chaining, 
-void functions in the C API will return self in the low level Ruby API.
+The return values of are numally similar to those in C. However, since in Ruby, 
+there are no void functions, and to enable method chaining, void functions in 
+the C API will return self in the low level Ruby API. Also, booleans or integers 
+used as booleans in the C API will become real booleans in the Ruby API. C NULLs
+will be replaced by nil in Ruby. Nil is also often returned on errors.  
 
 The names of the Ruby classes that wrap the Allegro structs have been changed 
 from all uppercase to camel case with the ALLEGRO_ prefix and any _ removed. 
-So ALLEGRO_BITMAP becomes Al:Bitmap, ALLEGRO_SAMPLE_ID becomes A::SampleId, etc. This is to avoid redundancy between the lowlevel and highlevel API, and to allow high level functionality to be defined for these Ruby classes. 
+So ALLEGRO_BITMAP becomes Al:Bitmap, ALLEGRO_SAMPLE_ID becomes A::SampleId, etc. 
+This is to avoid redundancy between the lowlevel and highlevel API, and to allow 
+high level functionality to be defined for these Ruby classes. 
 
+Even for the low level API, these classses may have some accessors defined to 
+simulate similar behaviour with the the C struct's members that are publicly
+accessible in Allegro.
 
 For C structs ALLEGRO_XXX that Allegro does not have an al_create_xxx or 
 al_destroy_xxx for, I still provide these functions, as to keep the low 
 level API usable. 
 
-The low level API is not documented in detail apart from here, because the C documentation of Allegro describes it well: http://www.allegro.cc/manual/5/ 
+The low level API is not documented in detail apart from here, because the C 
+documentation of Allegro describes it well: http://www.allegro.cc/manual/5/ 
 Please look there to learn more about it.  
 
 It also does not have any unit tests yet, because the lowlevel bindings are 

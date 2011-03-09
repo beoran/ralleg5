@@ -122,6 +122,7 @@ void Init_ralleg5() {
   ralleg5_audio_init(mAl, mLow);
   ralleg5_ustr_init(mAl, mLow);
   ralleg5_font_init(mAl, mLow);
+  ralleg5_transform_init(mAl, mLow);
   
 }
 
