@@ -4,6 +4,16 @@
 #include "allegro5/allegro.h"
 #include "rubyhelp.h"
 
+/* Helper macros to import constants in the low level API */
+#define rbal_low_const_uint(KLASS, CONST) \
+        rb_define_const(KLASS, ##CONST, UINT2NUM(CONST))
+
+#define rbal_low_const_int(KLASS, CONST) \
+        rb_define_const(KLASS, ##CONST, INT2NUM(CONST))
+        
+#define rbal_low__const(KLASS, CONST) rbal_const_uint(KLASS, CONST)
+         
+
 /* Functions that init ruby support for the various parts of allegro.  */
 
 extern void ralleg5_display_init(VALUE mAl);
