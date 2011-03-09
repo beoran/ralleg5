@@ -34,6 +34,7 @@ extern void ralleg5_keyboard_init(VALUE mAl);
 extern void ralleg5_draw_init(VALUE mAl);
 extern void ralleg5_audio_init(VALUE mAl, VALUE mLow);
 extern void ralleg5_ustr_init(VALUE mAl, VALUE mLow);
+extern void ralleg5_font_init(VALUE mAl, VALUE mLow);
 
 /* For the rbal_xxx_wrap functions */
 #define RBAL_NO_GC (0)
@@ -72,6 +73,8 @@ VALUE rbal_eventsource_wrap_nofree(ALLEGRO_EVENT_SOURCE * ptr);
  /* Unwraps an allegro event source . */
 ALLEGRO_EVENT_SOURCE * rbal_eventsource_unwrap(VALUE rself);
 
+/* Unwraps a ustr */
+ALLEGRO_USTR * rbal_ustr_unwrap(VALUE rself);
 
 /* Unwraps an allegro file */
 ALLEGRO_FILE * rbal_file_unwrap(VALUE rfp);

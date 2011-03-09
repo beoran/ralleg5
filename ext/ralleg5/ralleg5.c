@@ -114,13 +114,14 @@ void Init_ralleg5() {
   ralleg5_monitor_init(mAl);
   ralleg5_color_init(mAl);
   ralleg5_bitmap_init(mAl);
-  ralleg5_event_init(mAl); 
+  ralleg5_event_init(mAl);
   ralleg5_display_init(mAl);
   ralleg5_joystick_init(mAl);
   ralleg5_keyboard_init(mAl);
   ralleg5_draw_init(mAl);
   ralleg5_audio_init(mAl, mLow);
   ralleg5_ustr_init(mAl, mLow);
+  ralleg5_font_init(mAl, mLow);
   
 }
 
