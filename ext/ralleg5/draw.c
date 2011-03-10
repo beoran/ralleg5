@@ -4,6 +4,152 @@
 /* These are called "Primitives" in Allegro, but I think
 "Draw" is a simpler name for this. */
 
+/* A vertex class for al_draw_prim. */
+
+static VALUE cVertex; 
+
+ALLEGRO_VERTEX * rbal_vertex_alloc() {
+  return al_calloc(sizeof(ALLEGRO_VERTEX), 1);
+}
+
+void rbal_vertex_free(ALLEGRO_VERTEX * ptr) {
+  al_free(ptr);
+}
+
+ALLEGRO_VERTEX * rbal_vertex_init(ALLEGRO_VERTEX * ptr,
+  float x, float y, float z, float u, float v, ALLEGRO_COLOR color) {
+  if (!ptr) return NULL;
+  ptr->x = x; 
+  ptr->y = y;
+  ptr->z = z;
+  ptr->u = u;
+  ptr->v = v;
+  ptr->color = color;
+}
+
+ALLEGRO_VERTEX * rbal_vertex_make(float x, float y, float z, float u, float v, ALLEGRO_COLOR color) {
+  ALLEGRO_VERTEX * vert = rbal_vertex_alloc();
+  return rbal_vertex_init(vert, x, y, z, u, v, color);
+}
+
+
+
+
+
+/* Wraps a vertex into a Ruby object, optionally garbage collected. */
+VALUE rbal_vertex_wrap(ALLEGRO_VERTEX * ptr, int gc) {
+  if(!ptr) return Qnil;
+  if (gc) {
+    return Data_Wrap_Struct(cVertex, 0, rbal_vertex_free, ptr);
+  } else {
+    return Data_Wrap_Struct(cVertex, 0, 0, ptr);
+  } 
+}
+
+/* Unwraps a vertex from a ruby object */
+ALLEGRO_VERTEX * rbal_vertex_unwrap(VALUE rself) { 
+  ALLEGRO_VERTEX * result;
+  if (rself == Qnil) return NULL;
+  Data_Get_Struct(rself, ALLEGRO_VERTEX, result);
+  return result;
+}
+
+VALUE rbal_create_vertex(VALUE r_, VALUE rx, VALUE ry, 
+                         VALUE rz, VALUE ru, VALUE rv, VALUE rcolor) {
+  ALLEGRO_COLOR color   = rbal_color_struct(rcolor);
+  float x               = RBH_FLOAT(rx);
+  float y               = RBH_FLOAT(ry);
+  float z               = RBH_FLOAT(rz);
+  float u               = RBH_FLOAT(ru);
+  float v               = RBH_FLOAT(rv);
+  ALLEGRO_VERTEX * vert = rbal_vertex_make(x, y, z, u, v , color);
+  return rbal_vertex_wrap(vert, RBAL_NO_GC);  
+}
+
+VALUE rbal_vertex_create(VALUE r_, VALUE rx, VALUE ry, 
+                         VALUE rz, VALUE ru, VALUE rv, VALUE rcolor) {
+  ALLEGRO_COLOR color   = rbal_color_struct(rcolor);
+  float x               = RBH_FLOAT(rx);
+  float y               = RBH_FLOAT(ry);
+  float z               = RBH_FLOAT(rz);
+  float u               = RBH_FLOAT(ru);
+  float v               = RBH_FLOAT(rv);
+  ALLEGRO_VERTEX * vert = rbal_vertex_make(x, y, z, u, v , color);
+  return rbal_vertex_wrap(vert, RBAL_GC);  
+}
+
+VALUE rbal_destroy_vertex(VALUE r_, VALUE rvert ) {
+  ALLEGRO_VERTEX * vert = rbal_vertex_unwrap(rvert);
+  rbal_vertex_free(vert);
+  return r_;  
+}
+
+VALUE rbal_vertex_x(VALUE r_, VALUE rvert ) {
+  ALLEGRO_VERTEX * vert = rbal_vertex_unwrap(rvert);
+  if(!vert) return Qnil;
+  return RBH_FLOAT_NUM(vert->x);  
+}
+
+VALUE rbal_vertex_y(VALUE r_, VALUE rvert ) {
+  ALLEGRO_VERTEX * vert = rbal_vertex_unwrap(rvert);
+  if(!vert) return Qnil;
+  return RBH_FLOAT_NUM(vert->y);  
+}
+
+VALUE rbal_vertex_z(VALUE r_, VALUE rvert ) {
+  ALLEGRO_VERTEX * vert = rbal_vertex_unwrap(rvert);
+  if(!vert) return Qnil;
+  return RBH_FLOAT_NUM(vert->z);  
+}
+
+VALUE rbal_vertex_u(VALUE r_, VALUE rvert ) {
+  ALLEGRO_VERTEX * vert = rbal_vertex_unwrap(rvert);
+  if(!vert) return Qnil;
+  return RBH_FLOAT_NUM(vert->x);  
+}
+
+VALUE rbal_vertex_v(VALUE r_, VALUE rvert ) {
+  ALLEGRO_VERTEX * vert = rbal_vertex_unwrap(rvert);
+  if(!vert) return Qnil;
+  return RBH_FLOAT_NUM(vert->x);  
+}
+
+VALUE rbal_vertex_color(VALUE r_, VALUE rvert ) {
+  ALLEGRO_VERTEX * vert = rbal_vertex_unwrap(rvert);
+  if (!vert) return Qnil;
+  return rbal_color_wrap_struct(vert->color);  
+}
+
+
+
+
+/* Only ALLEGRO_VERTEX are supported, so the signature changes from C.
+* verts must be a ruby array of ALLEGRO_VERTEX objects. 
+*/
+VALUE rbal_draw_prim(VALUE r_, VALUE rverts, VALUE rtexture, VALUE rtype) {
+  ALLEGRO_BITMAP *  texture = rbal_bitmap_unwrap(rtexture);
+  ALLEGRO_VERTEX *  verts   = NULL;
+  int size                  = RARRAY_LEN(rtexture);
+  int index                 = 0;
+  int type                  = RBH_INT(rtype); 
+  if(size < 0)              return Qnil;
+  verts                     = al_calloc(sizeof(ALLEGRO_VERTEX), size);
+  /* Copy vertices from ruby array to C array. */
+  for(index = 0; index < size; index ++) {
+    ALLEGRO_VERTEX * vert   = rbal_vertex_unwrap(rb_ary_entry(rverts, index));
+    /* If one vertex is nil, just give up and draw nothing. */
+    if (!vert) goto give_up; 
+    verts[index]            = (*vert);
+    /* Ouch, all this copying could be slow... */
+  }
+  al_draw_prim(verts, NULL, texture, 0, size, type);
+  
+  give_up: 
+  /* Free up memory again. */
+  al_free(verts);
+  return r_;
+}
+ 
 static VALUE cDraw;
   
 VALUE rbal_draw_init(VALUE rself) {
@@ -210,14 +356,33 @@ VALUE rbal_fill_ellipse(VALUE rself,
 
 
 
-/*
+void ralleg_vertext_init(VALUE mAl, VALUE mLow) {
+  cVertex = rb_define_module_under(mAl, "Vertex");
+  rb_define_singleton_method(cVertex, "create", rbal_vertex_create  , 6);
+  
+  rb_define_method(cVertex, "x"     , rbal_vertex_x     , 0);
+  rb_define_method(cVertex, "y"     , rbal_vertex_y     , 0);
+  rb_define_method(cVertex, "z"     , rbal_vertex_z     , 0);
+  rb_define_method(cVertex, "u"     , rbal_vertex_u     , 0);
+  rb_define_method(cVertex, "v"     , rbal_vertex_v     , 0);
+  rb_define_method(cVertex, "color" , rbal_vertex_color , 0);
+  
+  rb_define_singleton_method(mLow, "al_create_vertex" , rbal_create_vertex, 6);
+  rb_define_singleton_method(mLow, "al_destroy_vertex", rbal_destroy_vertex, 1);
+  
+  rbal_low_method(mLow, al_draw_prim                 , 3);
+  
+  rbal_low_const(mLow, ALLEGRO_PRIM_LINE_LIST);
+  rbal_low_const(mLow, ALLEGRO_PRIM_LINE_STRIP);
+  rbal_low_const(mLow, ALLEGRO_PRIM_LINE_LOOP);
+  rbal_low_const(mLow, ALLEGRO_PRIM_TRIANGLE_LIST);
+  rbal_low_const(mLow, ALLEGRO_PRIM_TRIANGLE_STRIP);
+  rbal_low_const(mLow, ALLEGRO_PRIM_TRIANGLE_FAN);
+  rbal_low_const(mLow, ALLEGRO_PRIM_POINT_LIST);
+  rbal_low_const(mLow, ALLEGRO_PRIM_NUM_TYPES);
 
-ALLEGRO_PRIM_FUNC(void, al_draw_filled_triangle, (float x1, float y1, float x2, float y2, float x3, float y3, ALLEGRO_COLOR color));
-ALLEGRO_PRIM_FUNC(void, al_draw_filled_rectangle, (float x1, float y1, float x2, float y2, ALLEGRO_COLOR color));
-ALLEGRO_PRIM_FUNC(void, al_draw_filled_ellipse, (float cx, float cy, float rx, float ry, ALLEGRO_COLOR color));
-ALLEGRO_PRIM_FUNC(void, al_draw_filled_circle, (float cx, float cy, float r, ALLEGRO_COLOR color));
-ALLEGRO_PRIM_FUNC(void, al_draw_filled_rounded_rectangle, (float x1, float y1, float x2, float y2, float rx, float ry, ALLEGRO_COLOR color));
-*/
+}
+
 
 void ralleg5_draw_init(VALUE mAl) {
   cDraw = rb_define_module_under(mAl, "Draw");
@@ -236,3 +401,4 @@ void ralleg5_draw_init(VALUE mAl) {
   rb_define_singleton_method(cDraw, "draw_line"      , rbal_draw_line     , 5);
   rb_define_singleton_method(cDraw, "draw_spline"    , rbal_draw_spline   , 3);  
 }
+

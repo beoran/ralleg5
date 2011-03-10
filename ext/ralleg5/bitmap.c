@@ -392,7 +392,7 @@ VALUE rbal_bitmap_target_x(VALUE rself) {
 
 VALUE rbal_bitmap_compatible_p(VALUE rself) {
   ALLEGRO_BITMAP * self = rbal_bitmap_unwrap(rself);    
-  return RBH_INT_BOOL(al_is_compatible_bitmap_bitmap(self));
+  return RBH_INT_BOOL(al_is_compatible_bitmap(self));
 }
 
 
@@ -529,7 +529,7 @@ void ralleg5_bitmap_init(VALUE mAl) {
                          , UINT2NUM(ALLEGRO_ADD));
   rb_define_const(cBitmap, "SRC_MINUS_DEST"
                          , UINT2NUM(ALLEGRO_SRC_MINUS_DEST));
-  rb_define_const(cBitmap, "DESR_MINUS_SRC"
+  rb_define_const(cBitmap, "DEST_MINUS_SRC"
                          , UINT2NUM(ALLEGRO_DEST_MINUS_SRC));
   
   rb_define_singleton_method(cBitmap, "new"     , rbal_bitmap_new,  2);

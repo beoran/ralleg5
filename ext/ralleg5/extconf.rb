@@ -4,9 +4,18 @@ dir_config('ralleg5')
 
 CFLAGS='-O3'
 
+ALLEGRO5_LIBDIR = ["/usr/lib", "/usr/local/lib"]
+ALLEGRO5_INCDIR = ["/usr/include/allegro5", "/usr/local/include/allegro5"] 
+
+
 unless find_header("allegro.h", "/usr/include/allegro5", "/usr/local/include/allegro5")
   raise "Allegro5 includes not found!" 
 end
+
+unless find_header("allegro_image.h", "/usr/include/allegro5", "/usr/local/include/allegro5")
+  raise "Allegro5 image addon includes not found!" 
+end
+
 
 unless find_library("allegro", "al_get_allegro_version", "/usr/lib", "/usr/local/lib")
   raise "Allegro5 library not found!" 
@@ -37,10 +46,21 @@ unless find_library("allegro_ttf", "al_init_ttf_addon", "/usr/lib", "/usr/local/
   raise "Allegro5 ttf addon library not found!" 
 end
 
-unless find_library("allegro_dialog", "al_get_allegro_native_dialog_version",
-		    "/usr/lib", "/usr/local/lib")
-  raise "Allegro5 ttf addon library not found!" 
+if enable_config("allegro_dialog")
+  if find_library("allegro_dialog", "al_create_native_file_dialog",
+        "/usr/lib", "/usr/local/lib")
+          
+  unless $defs.include? "-DRALLEG5_WITH_DIALOG"
+      $defs.push("-DRALLEG5_WITH_DIALOG")
+  end   
+     
+  else       
+    warn "Allegro5 dialog addon library not found or not compiling! Dialogs will be disabled in this build!"
+  end
+
 end
+
+
 
 
 =begin
@@ -59,7 +79,7 @@ liballegro
 liballegro_ttf
 =end
 
-
+create_header
 create_makefile("ralleg5")
 
 

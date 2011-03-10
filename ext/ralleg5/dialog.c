@@ -1,6 +1,13 @@
 #include "ralleg5.h"
 #include "allegro5/allegro_native_dialog.h"
 
+#ifdef RALLEG5_WITH_DIALOG
+
+/** Unbfortunately, native dialogs won't work on some older versions of GDK.
+* Therefore, I have to postpose wrapping them for now, 
+* and make it optional later.  
+*/
+
 VALUE cDialog;
 VALUE cTextlog;
 VALUE cFilechooser;
@@ -23,7 +30,7 @@ ALLEGRO_FILECHOOSER * rbal_filechooser_unwrap(VALUE rself) {
   return result;
 }
 
-
+/*
 
 ALLEGRO_DIALOG_FUNC(ALLEGRO_FILECHOOSER *, al_create_native_file_dialog, (char const *initial_path,
    char const *title, char const *patterns, int mode));
@@ -43,7 +50,7 @@ ALLEGRO_DIALOG_FUNC(ALLEGRO_EVENT_SOURCE *, al_get_native_text_log_event_source,
 
 ALLEGRO_DIALOG_FUNC(uint32_t, al_get_allegro_native_dialog_version, (void));
 
-/*
+
 enum {
    ALLEGRO_FILECHOOSER_FILE_MUST_EXIST = 1,
    ALLEGRO_FILECHOOSER_SAVE            = 2,
@@ -70,3 +77,6 @@ enum {
    ALLEGRO_EVENT_NATIVE_DIALOG_CLOSE   = 600
 };
 */
+
+#endif
+

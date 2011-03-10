@@ -163,20 +163,20 @@ void ralleg5_transform_init(VALUE mAl, VALUE mLow) {
   rb_define_singleton_method(cTransform, "get"	      , rbal_transform_get, 2);
   rb_define_singleton_method(cTransform, "set"	      , rbal_transform_set, 3);
   
-  rbal_low_func(mLow  , al_create_transform             , 0 );
-  rbal_low_func(mLow  , al_destroy_transform            , 1 );
-  rbal_low_func(mLow  , al_identity_transform           , 1 );
-  rbal_low_func(mLow  , al_use_transform           	, 1 );
-  rbal_low_func(mLow  , al_copy_transform           	, 2 );
-  rbal_low_func(mLow  , al_build_transform           	, 6 );
-  rbal_low_func(mLow  , al_translate_transform        	, 3 );
-  rbal_low_func(mLow  , al_rotate_transform           	, 2 );
-  rbal_low_func(mLow  , al_scale_transform           	, 3 );
-  rbal_low_func(mLow  , al_compose_transform           	, 2 );
-  rbal_low_func(mLow  , al_transform_coordinates       	, 3 );
-  rbal_low_func(mLow  , al_get_current_transform      	, 0 );
-  rbal_low_func(mLow  , al_invert_transform     	, 1 );
-  rbal_low_func(mLow  , al_check_inverse      		, 2 );
+  rbal_low_func(mLow  , al_create_transform           , 0 );
+  rbal_low_func(mLow  , al_destroy_transform          , 1 );
+  rbal_low_func(mLow  , al_identity_transform         , 1 );
+  rbal_low_func(mLow  , al_use_transform              , 1 );
+  rbal_low_func(mLow  , al_copy_transform             , 2 );
+  rbal_low_func(mLow  , al_build_transform            , 6 );
+  rbal_low_func(mLow  , al_translate_transform        , 3 );
+  rbal_low_func(mLow  , al_rotate_transform           , 2 );
+  rbal_low_func(mLow  , al_scale_transform            , 3 );
+  rbal_low_func(mLow  , al_compose_transform          , 2 );
+  rbal_low_func(mLow  , al_transform_coordinates      , 3 );
+  rbal_low_func(mLow  , al_get_current_transform      , 0 );
+  rbal_low_func(mLow  , al_invert_transform           , 1 );
+  rbal_low_func(mLow  , al_check_inverse              , 2 );
   
 }
 
