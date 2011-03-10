@@ -8,12 +8,21 @@ These will be Ruby MRI Bindings to allegro5., using the Ruby C API.
 I won't use FFI since speed is of essence for game libraries. 
 
 
-Prerequisites: 
---------------
+Prerequisites 
+-------------
 Ruby: MRI 1.9.x. Others untested. 
 For compiling: allegro-5.0.0, and it's dependencies.
 For testing: watchr, autowatchr. Nanotest has been vendored.
 For documentation generation: YARD.
+
+Installation
+------------
+
+cd ext/ralleg5
+ruby ./extconf.rb
+make 
+make install
+
 
 APIs
 ----

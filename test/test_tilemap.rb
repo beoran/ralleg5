@@ -34,8 +34,10 @@ delta = stop - start
 p delta, 10.0 / delta
 p @bm1.compatible?
 
-# I'm getting a smooth 9 frames per second on an older PC with no HW 
-# accelleration... that kind of sucks. 
+# I'm getting a smooth 9 frames per second on an older PC under Linux with no HW 
+# accelleration... that kind of sucks. Alllegro 5 doesn't seem to have a 
+# software fallback with acceptable speed. Not to menton instability of the 
+# screen... 
 
 sleep(1) 
 
