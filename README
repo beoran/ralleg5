@@ -5,8 +5,7 @@ Ralleg5. Ruby bindings to the Allegro 5 game library.
 Introduction
 ------------
 These will be Ruby MRI Bindings to allegro5., using the Ruby C API. 
-I won't use FFI since speed is of essence for game libraries. 
-
+I won't use FFI since speed is of essence for game libraries.
 
 Prerequisites 
 -------------
