@@ -5,7 +5,17 @@ Ralleg5. Ruby bindings to the Allegro 5 game library.
 Introduction
 ------------
 These will be Ruby MRI Bindings to allegro5., using the Ruby C API. 
-I won't use FFI since speed is of essence for game libraries.
+I won't use FFI since speed is of essence for game libraries. Currently, 
+this project is on hold since for my my test on my older weaksauce PC,
+is Allegro5 is about half as slow under Linux than SDL is, even though 
+it should be  hardware accellerated. 
+
+For example, for drawing a one layer tilemap of 32x32 tiles on a 640x480 screen:
+SDL 1.2   : Delta, fps: 5.013000, 199.481348
+Allegro 5 : Delta, fps: 11.727150, 85.272210
+Hopefully this will be fixed somehow...
+
+
 
 Prerequisites 
 -------------

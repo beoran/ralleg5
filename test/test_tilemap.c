@@ -15,10 +15,14 @@
  *
  */
 
+
 #include <stdio.h>
 
-#undef USE_ALLEGRO
-#define USE_SDL
+#define REPEATS 1000
+#ifndef USE_SDL
+#define USE_ALLEGRO
+#endif
+/* #undef USE_SDL */
 
 #ifdef USE_ALLEGRO 
 #include <allegro5/allegro.h>
@@ -63,7 +67,7 @@ int main(void) {
   puts("2");
   
   start = al_get_time();
-  for (rep = 0; rep < 100; rep ++) {    
+  for (rep = 0; rep < REPEATS; rep ++) {    
     for(dx = 0; dx < 640; dx += 32) {
       for(dy = 0; dy < 480; dy += 32) {
         al_draw_bitmap(bmp, dx, dy, 0); 
@@ -73,7 +77,7 @@ int main(void) {
   }
   stop = al_get_time();
   delta = stop - start;
-  printf("Delta, fps: %lf, %lf\n", delta, 100.0 / delta);
+  printf("Delta, fps: %lf, %lf\n", delta, (double)REPEATS / delta);
 
   al_destroy_bitmap(bmp);
   al_destroy_display(disp);
@@ -105,7 +109,7 @@ int main(void) {
   sprite = sfSprite_Create();
   sfSprite_SetImage(sprite, bmp);
   start = clock(); 
-  for (rep = 0; rep < 100; rep ++) {
+  for (rep = 0; rep < REPEATS; rep ++) {
     for(dx = 0.0; dx < 640.0; dx += 32.0) {
       for(dy = 0.0; dy < 480.0; dy += 32.0) {
         sfSprite_SetX(sprite, dx);
@@ -161,7 +165,7 @@ int main(void) {
   start = SDL_GetTicks();
   aid.w = 32;
   aid.h = 32;
-  for (rep = 0; rep < 100; rep ++) {
+  for (rep = 0; rep < REPEATS; rep ++) {
     for(dx = 0; dx < 640; dx += 32) {
       for(dy = 0; dy < 480; dy += 32) {
         aid.x = dx;
@@ -174,7 +178,7 @@ int main(void) {
   stop  = SDL_GetTicks();
   delta = stop - start;
   printf("Delta, fps: %lf, %lf\n", ((double)delta) / 1000.0
-                                 , (1000.0 * 100.0) / ((double)delta));
+                                 , (1000.0 * ((double)REPEATS)) / ((double)delta));
   SDL_FreeSurface(opt);
   SDL_FreeSurface(bmp);
   SDL_Quit();  
